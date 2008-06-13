@@ -4,7 +4,7 @@ mex fill_matrix
 
 % test
 
-load test_data data M_true
+load testdata data M_true
 
 K_fit = fit_model(data);
 
