@@ -4,7 +4,7 @@ mex fill_matrix
 
 % test
 
-load testdata data M_true
+load testdata/three_phases data K_true
 
 K_fit = fit_model(data);
 
@@ -15,6 +15,9 @@ subplot(121)
 imagesc(K_true,[-1 1]*hval)
 subplot(122)
 imagesc(K_fit,[-1 1]*hval)
+
+K_true
+K_fit
 
 K_error = mean(abs(K_true(:)-K_fit(:)));
 
