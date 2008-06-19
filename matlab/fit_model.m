@@ -20,24 +20,25 @@ function K = fit_model(p)
 % prepare phaseinput, matrices, and parameters
 [d,nz] = size(p);
 
-z = reshape([ exp(1j*p); exp(-1j*p)],[2,d,nz]);
+z = reshape([exp(1j*p), exp(-1j*p)],[d,nz,2]);
 
 nij   = d^2 - d; % number of coupling terms
-na    = 4*d^3-d^2+6; % upper bound for number of elements in sparse matrix
+na    = 4*d^3-10*d^2+6*d; % upper bound for number of elements in sparse matrix
 
 % adata = complex(zeros(1,na),zeros(1,na));
 % arow  = zeros(1,na,'int8');
 % acol  = zeros(1,na,'int8');
 % b     = complex(zeros(1,nij),zeros(1,nij));
 
+
 % call fill_matrix to create linear set of equations (modifies data in place)
 tic
-[adata,arow,acol,b] = fill_matrix(z,nij,na);
+[a,b] = fill_matrix(z,nij,na);
 toc
 
+
 % solve linear system of equations
-a = sparse(arow,acol,adata,nij,nij); % uses nzmax = length(adata).
-kij = linsolve(a,b);
+kij = a\b;
 
 % prepare result for return
 K = zeros(d,d);
