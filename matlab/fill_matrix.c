@@ -45,41 +45,15 @@
 #define A_OUT		plhs[0]		// a matrix values
 #define B_OUT		plhs[1]		// b vector values
 
-/* complex multiplication, real part */
-double pr(double* zr, double* zi, int ind1, int ind2)
-{
-  return zr[ind1]*zr[ind2]-zi[ind1]*zi[ind2];
-}
+/* complex multiplication */
+#define mr(xr,xi,yr,yi) xr*yr-xi*yi
+#define mi(xr,xi,yr,yi) xr*yi+xi*yr
+#define pr(zr,zi,i1,i2) zr[i1]*zr[i2]-zi[i1]*zi[i2]
+#define pi(zr,zi,i1,i2) zr[i1]*zi[i2]+zi[i1]*zr[i2]
 
-/* complex multiplication, imaginary part */
-double pi(double* zr, double* zi, int ind1, int ind2)
-{
-  return zr[ind1]*zi[ind2]+zi[ind1]*zr[ind2];
-}
-
-/* complex multiplication, conjugate second argument, real part */
-double pcr(double* zr, double* zi, int ind1, int ind2)
-{
-  return zr[ind1]*zr[ind2]+zi[ind1]*zi[ind2];
-}
-
-/* complex multiplication, conjugate second argument, imaginary part */
-double pci(double* zr, double* zi, int ind1, int ind2)
-{
-  return -zr[ind1]*zi[ind2]+zi[ind1]*zr[ind2];
-}
-
-/* complex multiplication, real part */
-double mr(double xr, double xi, double yr, double yi)
-{
-  return xr*yr-xi*yi;
-}
-
-/* complex multiplication, imaginary part */
-double mi(double xr, double xi, double yr, double yi)
-{
-  return xr*yi+xi*yr;
-}
+/* complex multiplication, conjugate second argument */
+#define pcr(zr,zi,i1,i2) zr[i1]*zr[i2]+zi[i1]*zi[i2]
+#define pci(zr,zi,i1,i2) zi[i1]*zr[i2]-zr[i1]*zi[i2]
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
