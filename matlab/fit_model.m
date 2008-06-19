@@ -51,8 +51,6 @@ function K = fit_model(p)
 % prepare phaseinput, matrices, and parameters
 [d,nz] = size(p);
 
-z = reshape([exp(1j*p), exp(-1j*p)],[d,nz,2]);
-
 nij   = d^2 - d; % number of coupling terms
 na    = 4*d^3-10*d^2+6*d; % upper bound for number of elements in sparse matrix
 
@@ -64,7 +62,7 @@ na    = 4*d^3-10*d^2+6*d; % upper bound for number of elements in sparse matrix
 
 % call fill_matrix to create linear set of equations (modifies data in place)
 tic
-[a,b] = fill_matrix(z,nij,na);
+[a,b] = fill_matrix(exp(1j*p),nij,na);
 toc
 
 

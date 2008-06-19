@@ -46,24 +46,46 @@
 #define B_OUT		plhs[1]		// b vector values
 
 /* complex multiplication, real part */
-double mr(double* zr, double* zi, int zind, double* wr, double* wi, int wind)
+double pr(double* zr, double* zi, int ind1, int ind2)
 {
-  return zr[zind]*wr[wind]-zi[zind]*wi[wind];
+  return zr[ind1]*zr[ind2]-zi[ind1]*zi[ind2];
 }
 
 /* complex multiplication, imaginary part */
-double mi(double* zr, double* zi, int zind, double* wr, double* wi, int wind)
+double pi(double* zr, double* zi, int ind1, int ind2)
 {
-  return zr[zind]*wi[wind]+zi[zind]*wr[wind];
+  return zr[ind1]*zi[ind2]+zi[ind1]*zr[ind2];
+}
+
+/* complex multiplication, conjugate second argument, real part */
+double pcr(double* zr, double* zi, int ind1, int ind2)
+{
+  return zr[ind1]*zr[ind2]+zi[ind1]*zi[ind2];
+}
+
+/* complex multiplication, conjugate second argument, imaginary part */
+double pci(double* zr, double* zi, int ind1, int ind2)
+{
+  return -zr[ind1]*zi[ind2]+zi[ind1]*zr[ind2];
+}
+
+/* complex multiplication, real part */
+double mr(double xr, double xi, double yr, double yi)
+{
+  return xr*yr-xi*yi;
+}
+
+/* complex multiplication, imaginary part */
+double mi(double xr, double xi, double yr, double yi)
+{
+  return xr*yi+xi*yr;
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
   double *zr, *zi;    
-  double *wr, *wi;
-  mxArray *x,*y;
-  double *xr, *xi; 
-  double *yr, *yi;    
+  double xr, xi; 
+  double yr, yi;    
   mwSize  d, nz;
   mwSize nij, na;
   const mwSize *shape;
@@ -82,8 +104,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexErrMsgTxt("Two output arguments required.");
     
   /* Get the number of dimensions in the input argument. */
-  if (mxGetNumberOfDimensions(Z_IN) != 3)
-    mexErrMsgTxt("Z must be 3d array.");
+  if (mxGetNumberOfDimensions(Z_IN) != 2)
+    mexErrMsgTxt("Z must be 2d array.");
   
   /*Check that z is complex*/
   if (!mxIsComplex(Z_IN) )
@@ -102,13 +124,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   // mexPrintf("nij = %d, na = %d\n",nij,na);
   // mexPrintf("z-dimensions: %d, %d, %d\n",shape[0],shape[1],shape[2]);
   
-  // Allocate memory for intermediate values
-  x = mxCreateDoubleMatrix(1,1,mxCOMPLEX);
-  y = mxCreateDoubleMatrix(1,1,mxCOMPLEX);
-  xr = mxGetPr(x);
-  xi = mxGetPi(x);
-  yr = mxGetPr(y);
-  yi = mxGetPi(y);
 
   // Allocate memory and assign output pointers
   A_OUT = mxCreateSparse(nij,nij,na,mxCOMPLEX);
@@ -117,8 +132,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   // Get a pointer to the z data
   zr = mxGetPr(Z_IN);
   zi = mxGetPi(Z_IN);
-  wr = zr + d*nz;
-  wi = zi + d*nz;
 
   // Get a pointer to the data space in allocated memory
   ar = mxGetPr(A_OUT);
@@ -135,8 +148,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       if (ij >= nij) mexErrMsgTxt("vector b too small! This should not happen!");
       for (n=0; n < nz; n++) {
 	  // b(ij) -= 2.*z(1,i,n)*z(0,j,n);
-	  br[ij] -= 2.*mr(wr,wi,i+n*d,zr,zi,j+n*d);
-	  bi[ij] -= 2.*mi(wr,wi,i+n*d,zr,zi,j+n*d);
+	  br[ij] -= 2.*pcr(zr,zi,j+n*d,i+n*d);
+	  bi[ij] -= 2.*pci(zr,zi,j+n*d,i+n*d);
       }
       acol[ij] = ia;
       ij++;
@@ -151,34 +164,34 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	  arow[ia] = kl;
 	  // if (i==k) for (n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
 	  if (i==k) for (n=0; n < nz; n++) {
-	      xr[0] = mr(wr,wi,i+n*d,wr,wi,k+n*d);
-	      xi[0] = mi(wr,wi,i+n*d,wr,wi,k+n*d);
-	      yr[0] = mr(zr,zi,l+n*d,zr,zi,j+n*d);
-	      yi[0] = mi(zr,zi,l+n*d,zr,zi,j+n*d);
-	      ar[ia] -= .5*mr(xr,xi,0,yr,yi,0);
-	      ai[ia] -= .5*mi(xr,xi,0,yr,yi,0);
+	      xr = pr(zr,zi,i+n*d,k+n*d);
+	      xi = -pi(zr,zi,i+n*d,k+n*d);
+	      yr = pr(zr,zi,l+n*d,j+n*d);
+	      yi = pi(zr,zi,l+n*d,j+n*d);
+	      ar[ia] -= .5*mr(xr,xi,yr,yi);
+	      ai[ia] -= .5*mi(xr,xi,yr,yi);
 	    }
 
 	  // if (i==l) for (n=0; n < nz; n++) adata(ia) += .5*z(0,j,n)*z(1,k,n);
 	  if (i==l) for (n=0; n < nz; n++) {
-	      ar[ia] += .5*mr(zr,zi,j+n*d,wr,wi,k+n*d);
-	      ai[ia] += .5*mi(zr,zi,j+n*d,wr,wi,k+n*d);
+	      ar[ia] += .5*pcr(zr,zi,j+n*d,k+n*d);
+	      ai[ia] += .5*pci(zr,zi,j+n*d,k+n*d);
 	    }
 
 	  // if (j==k) for (n=0; n < nz; n++) adata(ia) += .5*z(1,i,n)*z(0,l,n);
 	  if (j==k) for (n=0; n < nz; n++) {
-	      ar[ia] += .5*mr(wr,wi,i+n*d,zr,zi,l+n*d);
-	      ai[ia] += .5*mi(wr,wi,i+n*d,zr,zi,l+n*d);
+	      ar[ia] += .5*pcr(zr,zi,l+n*d,i+n*d);
+	      ai[ia] += .5*pci(zr,zi,l+n*d,i+n*d);
 	    }
 
 	  // if (j==l) for (n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
 	  if (j==l) for (n=0; n < nz; n++) {
-	      xr[0] = mr(wr,wi,i+n*d,wr,wi,k+n*d);
-	      xi[0] = mi(wr,wi,i+n*d,wr,wi,k+n*d);
-	      yr[0] = mr(zr,zi,l+n*d,zr,zi,j+n*d);
-	      yi[0] = mi(zr,zi,l+n*d,zr,zi,j+n*d);
-	      ar[ia] -= .5*mr(xr,xi,0,yr,yi,0);
-	      ai[ia] -= .5*mi(xr,xi,0,yr,yi,0);	      
+	      xr = pr(zr,zi,i+n*d,k+n*d);
+	      xi = -pi(zr,zi,i+n*d,k+n*d);
+	      yr = pr(zr,zi,l+n*d,j+n*d);
+	      yi = pi(zr,zi,l+n*d,j+n*d);
+	      ar[ia] -= .5*mr(xr,xi,yr,yi);
+	      ai[ia] -= .5*mi(xr,xi,yr,yi);	      
 	    }
 	  kl++;
 	  ia++;
@@ -187,8 +200,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
   }
   acol[nij] = ia;
-  mxDestroyArray(x);
-  mxDestroyArray(y);
   return;
 }
 
