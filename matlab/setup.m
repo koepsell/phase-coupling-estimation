@@ -1,4 +1,17 @@
-% AUTORIGHTS
+%setup
+% 
+% 		Description: 
+% 		Compiles the C routine (mex file) and tests the
+% 		accuracy of the algorithm and the code implementation.
+%
+% Authors: Charles Cadieu <cadieu@berkeley.edu> and
+%          Kilian Koepsell <kilian@berkeley.edu> 
+%
+% Reference: C. Cadieu and K. Koepsell, A Multivaraite Phase Distribution and its 
+%            Estimation, NIPS, 2009 (in submission).
+
+% Copyright (c) 2008 The Regents of the University of California
+% All Rights Reserved.
 
 mex fill_matrix.c
 
