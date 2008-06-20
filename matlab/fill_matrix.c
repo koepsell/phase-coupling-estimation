@@ -69,7 +69,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   mwIndex ij = 0;
   mwIndex kl;
   mwIndex ia = 0;
-  mwIndex i,j,k,l,n;
+  mwIndex i,j,k,l,nd;
 
   /* check for the proper number of arguments */
   if(nrhs != 3)
@@ -120,10 +120,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       if (i==j) continue;
       kl = 0;
       if (ij >= nij) mexErrMsgTxt("vector b too small! This should not happen!");
-      for (n=0; n < nz; n++) {
+      for (nd=0; nd < nz*d; nd+=d) {
 	  // b(ij) -= 2.*z(1,i,n)*z(0,j,n);
-	  br[ij] -= 2.*pcr(zr,zi,j+n*d,i+n*d);
-	  bi[ij] -= 2.*pci(zr,zi,j+n*d,i+n*d);
+	  br[ij] -= 2.*pcr(zr,zi,j+nd,i+nd);
+	  bi[ij] -= 2.*pci(zr,zi,j+nd,i+nd);
       }
       acol[ij] = ia;
       ij++;
@@ -137,33 +137,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 	  if (ia >= na) mexErrMsgTxt("sparse matrix too small! This should not happen!");
 	  arow[ia] = kl;
 	  // if (i==k) for (n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
-	  if (i==k) for (n=0; n < nz; n++) {
-	      xr = pr(zr,zi,i+n*d,k+n*d);
-	      xi = -pi(zr,zi,i+n*d,k+n*d);
-	      yr = pr(zr,zi,l+n*d,j+n*d);
-	      yi = pi(zr,zi,l+n*d,j+n*d);
+	  if (i==k) for (nd=0; nd < nz*d; nd+=d) {
+	      xr = pr(zr,zi,i+nd,k+nd);
+	      xi = -pi(zr,zi,i+nd,k+nd);
+	      yr = pr(zr,zi,l+nd,j+nd);
+	      yi = pi(zr,zi,l+nd,j+nd);
 	      ar[ia] -= .5*mr(xr,xi,yr,yi);
 	      ai[ia] -= .5*mi(xr,xi,yr,yi);
 	    }
 
 	  // if (i==l) for (n=0; n < nz; n++) adata(ia) += .5*z(0,j,n)*z(1,k,n);
-	  if (i==l) for (n=0; n < nz; n++) {
-	      ar[ia] += .5*pcr(zr,zi,j+n*d,k+n*d);
-	      ai[ia] += .5*pci(zr,zi,j+n*d,k+n*d);
+	  if (i==l) for (nd=0; nd < nz*d; nd+=d) {
+	      ar[ia] += .5*pcr(zr,zi,j+nd,k+nd);
+	      ai[ia] += .5*pci(zr,zi,j+nd,k+nd);
 	    }
 
 	  // if (j==k) for (n=0; n < nz; n++) adata(ia) += .5*z(1,i,n)*z(0,l,n);
-	  if (j==k) for (n=0; n < nz; n++) {
-	      ar[ia] += .5*pcr(zr,zi,l+n*d,i+n*d);
-	      ai[ia] += .5*pci(zr,zi,l+n*d,i+n*d);
+	  if (j==k) for (nd=0; nd < nz*d; nd+=d) {
+	      ar[ia] += .5*pcr(zr,zi,l+nd,i+nd);
+	      ai[ia] += .5*pci(zr,zi,l+nd,i+nd);
 	    }
 
 	  // if (j==l) for (n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
-	  if (j==l) for (n=0; n < nz; n++) {
-	      xr = pr(zr,zi,i+n*d,k+n*d);
-	      xi = -pi(zr,zi,i+n*d,k+n*d);
-	      yr = pr(zr,zi,l+n*d,j+n*d);
-	      yi = pi(zr,zi,l+n*d,j+n*d);
+	  if (j==l) for (nd=0; nd < nz*d; nd+=d) {
+	      xr = pr(zr,zi,i+nd,k+nd);
+	      xi = -pi(zr,zi,i+nd,k+nd);
+	      yr = pr(zr,zi,l+nd,j+nd);
+	      yi = pi(zr,zi,l+nd,j+nd);
 	      ar[ia] -= .5*mr(xr,xi,yr,yi);
 	      ai[ia] -= .5*mi(xr,xi,yr,yi);	      
 	    }
