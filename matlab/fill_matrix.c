@@ -46,14 +46,14 @@
 #define B_OUT		plhs[1]		// b vector values
 
 /* complex multiplication */
-#define mr(xr,xi,yr,yi) xr*yr-xi*yi
-#define mi(xr,xi,yr,yi) xr*yi+xi*yr
-#define pr(zr,zi,i1,i2) zr[i1]*zr[i2]-zi[i1]*zi[i2]
-#define pi(zr,zi,i1,i2) zr[i1]*zi[i2]+zi[i1]*zr[i2]
+#define mr(xr,xi,yr,yi) (xr*yr-xi*yi)
+#define mi(xr,xi,yr,yi) (xr*yi+xi*yr)
+#define pr(zr,zi,i1,i2) (zr[i1]*zr[i2]-zi[i1]*zi[i2])
+#define pi(zr,zi,i1,i2) (zr[i1]*zi[i2]+zi[i1]*zr[i2])
 
 /* complex multiplication, conjugate second argument */
-#define pcr(zr,zi,i1,i2) zr[i1]*zr[i2]+zi[i1]*zi[i2]
-#define pci(zr,zi,i1,i2) zi[i1]*zr[i2]-zr[i1]*zi[i2]
+#define pcr(zr,zi,i1,i2) (zr[i1]*zr[i2]+zi[i1]*zi[i2])
+#define pci(zr,zi,i1,i2) (zi[i1]*zr[i2]-zr[i1]*zi[i2])
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
