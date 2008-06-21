@@ -1,0 +1,17 @@
+
+----
+v0.2
+----
+:date:        Fri Jun 20 2008
+:summary:
+	* now works for single precision phase data.
+	* sped-up by better pointer arithmetik.
+	* replaced all functions with compiler definitions (#define).
+	* modified the code, so that the conjugate is computed int the mex file.
+
+----
+v0.1
+----
+:date:        Jun 18 2008
+:summary:
+	* packaged everything up for distribution. v0.1
