@@ -19,6 +19,17 @@ mex fill_matrix.c
 
 load testdata/three_phases data K_true K_python
 
+% fit data with single precision
+K_fit = fit_model(single(data));
+
+K_error_single = mean(abs(K_true(:)-K_fit(:)));
+code_error_single = mean(abs(K_python(:)-K_fit(:)));
+
+fprintf('\n single precision');
+fprintf('\n mean-absolute-difference = %6.8f; expect: 0.01730561',K_error_single);
+fprintf('\n difference from python code = %6.8f; expect: 0.0\n',code_error_single);
+
+% fit data with doubleﬂ precision
 K_fit = fit_model(data);
 
 hval = max(max(abs(K_fit(:))),max(abs(K_true(:))));
@@ -43,5 +54,6 @@ K_fit
 K_error = mean(abs(K_true(:)-K_fit(:)));
 code_error = mean(abs(K_python(:)-K_fit(:)));
 
+fprintf('\n double precision');
 fprintf('\n mean-absolute-difference = %6.8f; expect: 0.01730561',K_error);
 fprintf('\n difference from python code = %6.8f; expect: 0.0\n',code_error);

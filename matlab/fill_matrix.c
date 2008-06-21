@@ -46,26 +46,22 @@
 #define B_OUT		plhs[1]		// b vector values
 
 /* complex multiplication */
-#define mr(xr,xi,yr,yi) (xr*yr-xi*yi)
-#define mi(xr,xi,yr,yi) (xr*yi+xi*yr)
-#define pr(zr,zi,i1,i2) (zr[i1]*zr[i2]-zi[i1]*zi[i2])
-#define pi(zr,zi,i1,i2) (zr[i1]*zi[i2]+zi[i1]*zr[i2])
+#define mr(xr,xi,yr,yi) (double)(xr*yr-xi*yi)
+#define mi(xr,xi,yr,yi) (double)(xr*yi+xi*yr)
+#define pr(zr,zi,i1,i2) (double)(zr[i1]*zr[i2]-zi[i1]*zi[i2])
+#define pi(zr,zi,i1,i2) (double)(zr[i1]*zi[i2]+zi[i1]*zr[i2])
 
 /* complex multiplication, conjugate second argument */
-#define pcr(zr,zi,i1,i2) (zr[i1]*zr[i2]+zi[i1]*zi[i2])
-#define pci(zr,zi,i1,i2) (zi[i1]*zr[i2]-zr[i1]*zi[i2])
+#define pcr(zr,zi,i1,i2) (double)(zr[i1]*zr[i2]+zi[i1]*zi[i2])
+#define pci(zr,zi,i1,i2) (double)(zi[i1]*zr[i2]-zr[i1]*zi[i2])
+
+void fill_matrix_single(mwSize d, mwSize nz, mwSize nij, mwSize na, const mxArray *z_in, mxArray *a_out, mxArray *b_out);
+void fill_matrix_double(mwSize d, mwSize nz, mwSize nij, mwSize na, const mxArray *z_in, mxArray *a_out, mxArray *b_out);
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
-  double *zr, *zi;    
-  double xr, xi; 
-  double yr, yi;    
   mwSize  d, nz;
   mwSize nij, na;
-  const mwSize *shape;
-  mwIndex *arow, *acol;
-  double *ar, *ai;    
-  double *br, *bi;    
   mwIndex ij = 0;
   mwIndex kl;
   mwIndex ia = 0;
@@ -89,32 +85,140 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if (!mxIsDouble(NIJ_IN) || !mxIsDouble(NA_IN))
     mexErrMsgTxt("nij and na must be scalars.\n");
 
-  shape = mxGetDimensions(Z_IN);
-  d = shape[0];
-  nz = shape[1];
+  d = mxGetM(Z_IN);
+  nz = mxGetN(Z_IN);
   nij = (mwSize)mxGetScalar(NIJ_IN);
   na = (mwSize)mxGetScalar(NA_IN);
   // mexPrintf("d = %d, nz = %d\n",d,nz);
   // mexPrintf("nij = %d, na = %d\n",nij,na);
   // mexPrintf("z-dimensions: %d, %d, %d\n",shape[0],shape[1],shape[2]);
   
-
   // Allocate memory and assign output pointers
   A_OUT = mxCreateSparse(nij,nij,na,mxCOMPLEX);
   B_OUT = mxCreateDoubleMatrix(nij,1,mxCOMPLEX);
 
+  /*Check if Z is single or double precision*/
+  if (mxIsDouble(Z_IN)) fill_matrix_double(d, nz, nij, na, Z_IN, A_OUT, B_OUT);
+  else if (mxIsSingle(Z_IN)) fill_matrix_single(d, nz, nij, na, Z_IN, A_OUT, B_OUT);
+  else mexErrMsgTxt("Z has to be single or double precision.\n");
+
+  return;
+}
+
+
+void fill_matrix_double(mwSize d, mwSize nz, mwSize nij, mwSize na, const mxArray *z_in, mxArray *a_out, mxArray *b_out)
+{
+  double *zr, *zi;    
+  double xr, xi; 
+  double yr, yi;
+  mwIndex *arow, *acol;
+  double *ar, *ai;    
+  double *br, *bi;    
+  mwIndex ij = 0;
+  mwIndex kl;
+  mwIndex ia = 0;
+  mwIndex i,j,k,l,nd;
+
   // Get a pointer to the z data
-  zr = mxGetPr(Z_IN);
-  zi = mxGetPi(Z_IN);
+  zr = mxGetPr(z_in);
+  zi = mxGetPi(z_in);
 
   // Get a pointer to the data space in allocated memory
-  ar = mxGetPr(A_OUT);
-  ai = mxGetPi(A_OUT);
-  arow = mxGetIr(A_OUT);
-  acol = mxGetJc(A_OUT);
-  br = mxGetPr(B_OUT);
-  bi = mxGetPi(B_OUT);
-    
+  ar = mxGetPr(a_out);
+  ai = mxGetPi(a_out);
+  arow = mxGetIr(a_out);
+  acol = mxGetJc(a_out);
+  br = mxGetPr(b_out);
+  bi = mxGetPi(b_out);
+
+  for (i=0; i < d; i++) {
+    for (j=0; j < d; j++) {
+      if (i==j) continue;
+      kl = 0;
+      if (ij >= nij) mexErrMsgTxt("vector b too small! This should not happen!");
+      for (nd=0; nd < nz*d; nd+=d) {
+	  // b(ij) -= 2.*z(1,i,n)*z(0,j,n);
+	  br[ij] -= 2.*pcr(zr,zi,j+nd,i+nd);
+	  bi[ij] -= 2.*pci(zr,zi,j+nd,i+nd);
+      }
+      acol[ij] = ia;
+      ij++;
+      for (k=0; k < d; k++) {
+	for (l=0; l < d; l++) {
+	  if (k==l) continue;
+	  if ((i!=k) && (i!=l) && (j!=k) && (j!=l)) {
+	    kl++;
+	    continue;
+	  }
+	  if (ia >= na) mexErrMsgTxt("sparse matrix too small! This should not happen!");
+	  arow[ia] = kl;
+	  // if (i==k) for (n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
+	  if (i==k) for (nd=0; nd < nz*d; nd+=d) {
+	      xr = pr(zr,zi,i+nd,k+nd);
+	      xi = -pi(zr,zi,i+nd,k+nd);
+	      yr = pr(zr,zi,l+nd,j+nd);
+	      yi = pi(zr,zi,l+nd,j+nd);
+	      ar[ia] -= .5*mr(xr,xi,yr,yi);
+	      ai[ia] -= .5*mi(xr,xi,yr,yi);
+	    }
+
+	  // if (i==l) for (n=0; n < nz; n++) adata(ia) += .5*z(0,j,n)*z(1,k,n);
+	  if (i==l) for (nd=0; nd < nz*d; nd+=d) {
+	      ar[ia] += .5*pcr(zr,zi,j+nd,k+nd);
+	      ai[ia] += .5*pci(zr,zi,j+nd,k+nd);
+	    }
+
+	  // if (j==k) for (n=0; n < nz; n++) adata(ia) += .5*z(1,i,n)*z(0,l,n);
+	  if (j==k) for (nd=0; nd < nz*d; nd+=d) {
+	      ar[ia] += .5*pcr(zr,zi,l+nd,i+nd);
+	      ai[ia] += .5*pci(zr,zi,l+nd,i+nd);
+	    }
+
+	  // if (j==l) for (n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
+	  if (j==l) for (nd=0; nd < nz*d; nd+=d) {
+	      xr = pr(zr,zi,i+nd,k+nd);
+	      xi = -pi(zr,zi,i+nd,k+nd);
+	      yr = pr(zr,zi,l+nd,j+nd);
+	      yi = pi(zr,zi,l+nd,j+nd);
+	      ar[ia] -= .5*mr(xr,xi,yr,yi);
+	      ai[ia] -= .5*mi(xr,xi,yr,yi);	      
+	    }
+	  kl++;
+	  ia++;
+	}
+      }
+    }
+  }
+  acol[nij] = ia;
+  return;
+}
+
+
+void fill_matrix_single(mwSize d, mwSize nz, mwSize nij, mwSize na, const mxArray *z_in, mxArray *a_out, mxArray *b_out)
+{
+  float *zr, *zi;    
+  double xr, xi; 
+  double yr, yi;
+  mwIndex *arow, *acol;
+  double *ar, *ai;    
+  double *br, *bi;    
+  mwIndex ij = 0;
+  mwIndex kl;
+  mwIndex ia = 0;
+  mwIndex i,j,k,l,nd;
+
+  // Get a pointer to the z data
+  zr = (float*)mxGetPr(z_in);
+  zi = (float*)mxGetPi(z_in);
+
+  // Get a pointer to the data space in allocated memory
+  ar = mxGetPr(a_out);
+  ai = mxGetPi(a_out);
+  arow = mxGetIr(a_out);
+  acol = mxGetJc(a_out);
+  br = mxGetPr(b_out);
+  bi = mxGetPi(b_out);
+
   for (i=0; i < d; i++) {
     for (j=0; j < d; j++) {
       if (i==j) continue;
