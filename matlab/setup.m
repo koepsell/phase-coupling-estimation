@@ -25,10 +25,6 @@ K_fit = fit_model(single(data));
 K_error_single = mean(abs(K_true(:)-K_fit(:)));
 code_error_single = mean(abs(K_python(:)-K_fit(:)));
 
-fprintf('\n single precision');
-fprintf('\n mean-absolute-difference = %6.8f; expect: 0.01730561',K_error_single);
-fprintf('\n difference from python code = %6.8f; expect: 0.0\n',code_error_single);
-
 % fit data with doubleﬂ precision
 K_fit = fit_model(data);
 
@@ -54,6 +50,9 @@ K_fit
 K_error = mean(abs(K_true(:)-K_fit(:)));
 code_error = mean(abs(K_python(:)-K_fit(:)));
 
+fprintf('\n single precision');
+fprintf('\n mean-absolute-difference = %6.8f',K_error_single);
+fprintf('\n difference from python code = %6.8f\n',code_error_single);
 fprintf('\n double precision');
 fprintf('\n mean-absolute-difference = %6.8f; expect: 0.01730561',K_error);
 fprintf('\n difference from python code = %6.8f; expect: 0.0\n',code_error);
