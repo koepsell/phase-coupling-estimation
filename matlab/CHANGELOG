@@ -1,14 +1,14 @@
 ----
 v0.3
 ----
-:data:
+:data: Jun 25 2008
 :summary:
     * added script to estimate computation time (timing_estimate.m)
 
 ----
 v0.2
 ----
-:date:        Mon Jun 20 2008
+:date: Jun 20 2008
 :summary:
     * now works for single precision phase data.
     * sped-up by better pointer arithmetic.
@@ -18,6 +18,6 @@ v0.2
 ----
 v0.1
 ----
-:date:        Jun 18 2008
+:date: Jun 18 2008
 :summary:
     * packaged everything up for distribution. v0.1
