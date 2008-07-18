@@ -63,11 +63,10 @@ na    = 4*d^3-10*d^2+6*d; % upper bound for number of elements in sparse matrix
 % call fill_matrix to create linear set of equations (modifies data in place)
 tic
 [a,b] = fill_matrix(exp(1j*p),nij,na);
-toc
-
 
 % solve linear system of equations
 kij = a\b;
+toc
 
 % prepare result for return
 K = zeros(d,d);
