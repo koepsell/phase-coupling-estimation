@@ -1,0 +1,9 @@
+function G = g_phasedist_biased(theta,M)
+x = zeros(1,2*length(theta)+2);
+x(1) = 1;
+x(3:2:end) = cos(theta);
+x(4:2:end) = sin(theta);
+xdot = zeros(2*length(theta)+2,length(theta));
+xdot(3:2:end,:) = diag(-sin(theta)); 
+xdot(4:2:end,:) = diag(cos(theta)); 
+G=x*M*xdot;

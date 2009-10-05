@@ -13,7 +13,7 @@
 % Copyright (c) 2008 The Regents of the University of California
 % All Rights Reserved.
 
-mex fill_matrix.c
+mex -largeArrayDims fill_matrix.c
 
 % test
 
@@ -25,7 +25,7 @@ K_fit = fit_model(single(data));
 K_error_single = mean(abs(K_true(:)-K_fit(:)));
 code_error_single = mean(abs(K_python(:)-K_fit(:)));
 
-% fit data with doubleﬂ precision
+% fit data with double precision
 K_fit = fit_model(data);
 
 hval = max(max(abs(K_fit(:))),max(abs(K_true(:))));

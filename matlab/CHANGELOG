@@ -1,3 +1,8 @@
+:summary:
+    * added -largeArrayDims fill_matrix.c mex option (required in matlab Version > 7.3 (R2006b)
+    * added sampling using hmc2.m
+    * added bias term to distribution
+
 ----
 v0.3
 ----
