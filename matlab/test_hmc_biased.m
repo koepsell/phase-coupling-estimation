@@ -43,12 +43,13 @@ opts.stepadj = step_sz;
 opts.persistence = persistence;
 
 [samps, E, diagn] = hmc2('f_phasedist_biased',zeros(sz,1),opts,'g_phasedist_biased',M);
-data = smod(transpose(samps));
+[nsamples,dim] = size(samps);
+data = zeros(dim+1,nsamples);
+data(2:end,1:end) = smod(transpose(samps));
 
 %% fit data with double precision
 
-% K_fit = fit_model(data);
-K_fit = zeros(dim+1);
+K_fit = fit_model(data);
 
 %% plot results
 
