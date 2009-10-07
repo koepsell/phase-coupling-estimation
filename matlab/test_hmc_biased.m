@@ -11,15 +11,16 @@ addpath('f_energy');
 
 %% load data
 
-load('testdata/three_phases.mat','K_true','data');
-[sz,tmp] = size(K_true);
+% load('testdata/three_phases.mat','K_true','data');
+% sz = size(K_true,1);
 
 %%
 
-dim = 3;
+dim = 5;
 K_true = randn(dim+1,dim+1)+1j*randn(dim+1,dim+1);
 K_true(logical(eye(dim+1))) = 0;
 K_true = .5*(K_true+conj(transpose(K_true)));
+sz = size(K_true,1)-1;
 
 %% convert coupling from complex 3x3 to real 6x6 matrix
 

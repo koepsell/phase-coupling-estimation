@@ -1,4 +1,4 @@
-function K = fit_model(p)
+function K = fit_model(p, eps)
 %fit_model  Multivariate Phase Distribution Estimation 
 % 
 % 			Description: 
@@ -8,6 +8,12 @@ function K = fit_model(p)
 %			Inputs:
 %			P = d-by-n matrix of phase measurements where d is the dimensionality, 
 %				and n is the number of data points.
+%
+%           optional:
+%           eps = small variable (e.g. 0.01) used to compute the
+%                 regularized matrix inverse
+%                 G^{-1}_{reg} =  (G^T G + eps Id)^{-1}G^T
+%                 [section 6.4.1 in http://www.stanford.edu/~boyd/cvxbook/]
 %
 %			Outputs:
 %			K = the estimated K for the multivariate phase distribution
@@ -48,6 +54,9 @@ function K = fit_model(p)
 % BASIS, AND THE UNIVERSITY OF CALIFORNIA HAS NO OBLIGATIONS TO PROVIDE
 % MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
 
+% parse addisional parameters
+if nargin < 2, eps = 0; end
+
 % prepare phaseinput, matrices, and parameters
 [d,nz] = size(p);
 
@@ -65,7 +74,12 @@ tic
 [a,b] = fill_matrix(exp(1j*p),nij,na);
 
 % solve linear system of equations
-kij = a\b;
+if eps > 0
+    a2 = transpose(a)*a + eps*eye(size(a,1));
+    kij = inv(a2)*transpose(a)*b;
+else
+    kij = a\b;
+end
 toc
 
 % prepare result for return
