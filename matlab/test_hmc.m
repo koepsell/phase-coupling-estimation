@@ -16,7 +16,7 @@ addpath('f_energy');
 
 %%
 
-dim = 5;
+dim = 4;
 K_true = randn(dim,dim)+1j*randn(dim,dim);
 K_true(logical(eye(dim))) = 0;
 K_true = .5*(K_true+conj(transpose(K_true)));
@@ -43,8 +43,10 @@ opts.steps = lf_steps;
 opts.stepadj = step_sz;
 opts.persistence = persistence;
 
+tic
 [samps, E, diagn] = hmc2('f_phasedist',zeros(sz,1),opts,'g_phasedist',M);
 data = smod(transpose(samps));
+toc
 
 %% fit data with double precision
 

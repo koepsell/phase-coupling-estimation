@@ -174,9 +174,9 @@ while k <= opt_nsamples    %samples from k>0
     if (dir==-1 & n==0)
       % Restore, next state should be original start state.
       if window_offset > 0
-	x = xold;
-	p = pold;
-	n = window_offset;
+        x = xold;
+        p = pold;
+        n = window_offset;
       end
       %set dir for forward steps
       E = Eold;
@@ -185,19 +185,19 @@ while k <= opt_nsamples    %samples from k>0
       stps = dir;
     else
       if (n*dir+1<opt_window | n>(opt_steps-opt_window))
-	% State in the accept and/or reject window.
-	stps = dir;
+        % State in the accept and/or reject window.
+        stps = dir;
       else
-	% State not in the accept and/or reject window. 
-	stps = opt_steps-2*(opt_window-1);
+        % State not in the accept and/or reject window. 
+        stps = opt_steps-2*(opt_window-1);
       end
       % First half-step of leapfrog.
       p = p - dir*0.5*epsilon.*feval(gradf, x, varargin{:});
       x = x + dir*epsilon.*p;
       % Full leapfrog steps.
       for m = 1:(abs(stps)-1)
-	p = p - dir*epsilon.*feval(gradf, x, varargin{:});
-	x = x + dir*epsilon.*p;
+        p = p - dir*epsilon.*feval(gradf, x, varargin{:});
+        x = x + dir*epsilon.*p;
       end
       % Final half-step of leapfrog.
       p = p - dir*0.5*epsilon.*feval(gradf, x, varargin{:});
@@ -213,14 +213,14 @@ while k <= opt_nsamples    %samples from k>0
       % Account for state in reject window.  Reject window can be
       % ignored if windows consist of the entire trajectory.
       if ~have_rej
-	rej_free_energy = H;
+        rej_free_energy = H;
       else
-	rej_free_energy = -addlogs(-rej_free_energy, -H);
+        rej_free_energy = -addlogs(-rej_free_energy, -H);
       end
       if (~have_rej | rand(1) < exp(rej_free_energy-H));
-	E_rej=E;
-	x_rej=x;
-	p_rej=p;
+        E_rej=E;
+        x_rej=x;
+        p_rej=p;
         have_rej = 1;
       end
     end
@@ -228,15 +228,15 @@ while k <= opt_nsamples    %samples from k>0
     if (n>(opt_steps-opt_window))
       % Account for state in the accept window.
       if ~have_acc
-	acc_free_energy = H;
+        acc_free_energy = H;
       else
-	acc_free_energy = -addlogs(-acc_free_energy, -H);
+        acc_free_energy = -addlogs(-acc_free_energy, -H);
       end
       if (~have_acc | rand(1) < exp(acc_free_energy-H))
-	E_acc=E;
-	x_acc=x;
-	p_acc=p;
-	have_acc = 1;
+        E_acc=E;
+        x_acc=x;
+        p_acc=p;
+        have_acc = 1;
       end
     end
   end

@@ -78,6 +78,6 @@ K_reg
 K_error = mean(abs(K_true(:)-K_fit(:)));
 K_error_reg = mean(abs(K_true(:)-K_reg(:)));
 fprintf('\n double precision');
-fprintf('\n mean-absolute-difference (fit) = %6.8f; expect: ~ 0.07',K_error);
-fprintf('\n mean-absolute-difference (reg) = %6.8f; expect: ~ 0.07\n',K_error_reg);
+fprintf('\n mean-absolute-difference (fit) = %6.8f; expect: ~ 0.15',K_error);
+fprintf('\n mean-absolute-difference (reg) = %6.8f; expect: ~ 0.15\n',K_error_reg);
 
