@@ -6,4 +6,4 @@ x(4:2:end) = sin(theta);
 xdot = zeros(2*length(theta)+2,length(theta));
 xdot(3:2:end,:) = diag(-sin(theta)); 
 xdot(4:2:end,:) = diag(cos(theta)); 
-G=x*M*xdot;
+G=-x*M*xdot;

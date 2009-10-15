@@ -1,13 +1,13 @@
 function K = fit_model(p, eps)
 %fit_model  Multivariate Phase Distribution Estimation 
 % 
-% 			Description: 
-% 			K = FIT_MODEL(P,VARS) estimates the parameters of a multivariate 
-%			phase distribution using the distribution and method described in [1].
+%           Description: 
+%           K = FIT_MODEL(P,VARS) estimates the parameters of a multivariate 
+%               phase distribution using the distribution and method described in [1].
 %
-%			Inputs:
-%			P = d-by-n matrix of phase measurements where d is the dimensionality, 
-%				and n is the number of data points.
+%           Inputs:
+%           P = d-by-n matrix of phase measurements where d is the dimensionality, 
+%               and n is the number of data points.
 %
 %           optional:
 %           eps = small variable (e.g. 0.01) used to compute the
@@ -15,11 +15,11 @@ function K = fit_model(p, eps)
 %                 G^{-1}_{reg} =  (G^T G + eps Id)^{-1}G^T
 %                 [section 6.4.1 in http://www.stanford.edu/~boyd/cvxbook/]
 %
-%			Outputs:
-%			K = the estimated K for the multivariate phase distribution
+%           Outputs:
+%           K = the estimated K for the multivariate phase distribution
 %
-%		[1] C. Cadieu and K. Koepsell, A Multivaraite Phase Distribution and its 
-%			Estimation, NIPS, 2009 (in submission).
+%   [1] C. Cadieu and K. Koepsell, A Multivaraite Phase Distribution and its 
+%       Estimation, NIPS, 2009 (in submission).
 %
 
 % Copyright (c) 2008 The Regents of the University of California
@@ -60,6 +60,10 @@ if nargin < 2, eps = 0; end
 % prepare phaseinput, matrices, and parameters
 [d,nz] = size(p);
 
+if nz ~= length(p)
+    error('wrong data size: data samples have to be in matrix columns');
+end
+    
 nij   = d^2 - d; % number of coupling terms
 na    = 4*d^3-10*d^2+6*d; % upper bound for number of elements in sparse matrix
 
@@ -75,7 +79,7 @@ tic
 
 % solve linear system of equations
 if eps > 0
-    a2 = transpose(a)*a + eps*eye(size(a,1));
+    a2 = transpose(a)*a + eps*nz*eye(size(a,1));
     kij = inv(a2)*transpose(a)*b;
 else
     kij = a\b;
@@ -84,5 +88,4 @@ toc
 
 % prepare result for return
 K = zeros(d,d);
-K(~diag(ones(d,1))) = -kij;
-K = K';
+K(~diag(ones(d,1))) = kij;

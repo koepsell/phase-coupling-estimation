@@ -15,33 +15,48 @@
 
 mex -largeArrayDims fill_matrix.c
 
-% test
+%% convert data to new conventions
 
-load testdata/three_phases data K_true K_python
+% load testdata/three_phases data K_true K_python
+% K_true = -K_true;
+% K_python = -K_python;
+% save testdata/three_phases_v2 data K_true K_python -V7
 
-% fit data with single precision
+%% load data
+
+load testdata/three_phases_v2 data K_true K_python
+
+%% plot data
+
+plot_phase_dist_nd(data)
+
+%% fit data with single precision
+
 K_fit = fit_model(single(data));
 
-K_error_single = mean(abs(K_true(:)-K_fit(:)));
+% K_error_single = mean(abs(K_true(:)-K_fit(:)));
 code_error_single = mean(abs(K_python(:)-K_fit(:)));
 
-% fit data with double precision
+%% fit data with double precision
+
 K_fit = fit_model(data);
 
 hval = max(max(abs(K_fit(:))),max(abs(K_true(:))));
 
+%% display results
+
 figure(1)
 subplot(131)
 imagesc(abs(K_true),[-1 1]*hval)
-title('True coupling (K\_true)')
+title({'True coupling';'(K\_true)'})
 axis square off
 subplot(132)
 imagesc(abs(K_fit),[-1 1]*hval)
-title('Estimated coupling, matlab (K\_fit)')
+title({'Estimated coupling';'matlab (K\_fit)'})
 axis square off
 subplot(133)
 imagesc(abs(K_python),[-1 1]*hval)
-title('Estimated coupling, python (K\_python)')
+title({'Estimated coupling';'python (K\_python)'})
 axis square off
 
 K_true

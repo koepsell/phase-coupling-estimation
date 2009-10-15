@@ -5,4 +5,4 @@ x(2:2:end) = sin(theta);
 xdot = zeros(2*length(theta),length(theta));
 xdot(1:2:end,:) = diag(-sin(theta)); 
 xdot(2:2:end,:) = diag(cos(theta)); 
-G=x*M*xdot;
+G=-x*M*xdot;
