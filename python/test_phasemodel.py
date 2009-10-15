@@ -16,7 +16,7 @@ import phasemodel
 
 def test_phasemodel():
     # load test data
-    mdict = np.load('testdata/three_phases.npz')
+    mdict = np.load('testdata/three_phases_v2.npz')
     for var in mdict.files:
         globals()[var] = mdict[var]
 

@@ -118,9 +118,37 @@ def fit_model(phi):
     tic('matrix inversion')
     k_vec = dsolve.spsolve(a.tocsr(),b)
     k_mat = np.zeros((d,d),complex)
-    k_mat.T[np.where(np.diag(np.ones(d))-1)] = -k_vec
+    k_mat.T[np.where(np.diag(np.ones(d))-1)] = k_vec
     toc('matrix inversion')
     return k_mat
+
+
+def fit_model_biased(phi):
+    phi2 = np.vstack((np.zeros(phi.shape[1]),phi))
+    z = np.concatenate((np.exp(1j*phi2),np.exp(-1j*phi2)))
+    d = phi2.shape[0]
+    nz = phi2.shape[1]
+    z.shape = (2,d,nz)
+    nij = d**2-d # number of coupling terms
+    na = 4*d**3-10*d**2+6*d # upper bound for number of elements in sparse matrix
+    adata = np.zeros(na,complex)
+    arow = np.zeros(na,int)
+    acol = np.zeros(na,int)
+    b = np.zeros(nij,complex)
+
+    tic('weave')
+    weave.inline(phasemodel_code_blitz, ['z','adata','arow','acol','b'],
+                 type_converters=weave.converters.blitz)
+    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
+    toc('weave')
+
+    tic('matrix inversion')
+    k_vec = dsolve.spsolve(a.tocsr(),b)
+    k_mat = np.zeros((d,d),complex)
+    k_mat.T[np.where(np.diag(np.ones(d))-1)] = k_vec
+    toc('matrix inversion')
+    return k_mat
+
 
 phasemodel_code_blitz = """
 int d = Nz[1];
