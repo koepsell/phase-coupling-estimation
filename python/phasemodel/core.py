@@ -122,32 +122,8 @@ def fit_model(phi):
     toc('matrix inversion')
     return k_mat
 
-
 def fit_model_biased(phi):
-    phi2 = np.vstack((np.zeros(phi.shape[1]),phi))
-    z = np.concatenate((np.exp(1j*phi2),np.exp(-1j*phi2)))
-    d = phi2.shape[0]
-    nz = phi2.shape[1]
-    z.shape = (2,d,nz)
-    nij = d**2-d # number of coupling terms
-    na = 4*d**3-10*d**2+6*d # upper bound for number of elements in sparse matrix
-    adata = np.zeros(na,complex)
-    arow = np.zeros(na,int)
-    acol = np.zeros(na,int)
-    b = np.zeros(nij,complex)
-
-    tic('weave')
-    weave.inline(phasemodel_code_blitz, ['z','adata','arow','acol','b'],
-                 type_converters=weave.converters.blitz)
-    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
-    toc('weave')
-
-    tic('matrix inversion')
-    k_vec = dsolve.spsolve(a.tocsr(),b)
-    k_mat = np.zeros((d,d),complex)
-    k_mat.T[np.where(np.diag(np.ones(d))-1)] = k_vec
-    toc('matrix inversion')
-    return k_mat
+    return fit_model(np.vstack((np.zeros(phi.shape[1]),phi)))
 
 
 phasemodel_code_blitz = """
@@ -222,6 +198,10 @@ def fit_gen_model(phi):
     toc('matrix inversion')
     return m
 
+def fit_gen_model_biased(phi):
+    return fit_gen_model(np.vstack((np.zeros(phi.shape[1]),phi)))
+
+
 gen_phasemodel_code = """
 int d = Nx[0];
 int ny = Nx[1];
@@ -247,14 +227,14 @@ for (int i0=0; i0 < d; i0++) {
             temp  = 2.;
             temp *= q[(i0*ny+i1)*nx+n];
             temp *= q[(j0*ny+j1)*nx+n];
-            b[ij] += temp;
+            b[ij] -= temp;
           }
         }
         for (int n=0; n < nx; n++) {
           temp = 2.;
           temp *= x[(i0*ny+i1)*nx+n];
           temp *= x[(j0*ny+j1)*nx+n];
-          b[ij] -= temp;
+          b[ij] += temp;
         }
         kl = -1;
         for (int k0=0; k0 < d; k0++) {
@@ -327,7 +307,7 @@ def timing_benchmark(eval_dim=None,dims=[2, 4, 6, 8, 10],nsamps=10**4):
         phi = 2*np.pi*np.random.rand(d,nsamps)
 
         tic('fit parameters')
-        c_inv = fit_phasemodel(phi)
+        c_inv = fit_model(phi)
         t[ind] = toc('fit parameters')
         ind += 1
     pol = np.polyfit(dims[1:],t[1:],3)
@@ -355,7 +335,7 @@ if __name__ == '__main__':
     toc('sampling')
 
     tic('fiting')
-    M_hat = fit_phasemodel(phi)
+    M_hat = fit_model(phi)
     Mneg_hat,Mpos_hat= m2kappa(M_hat)
     # anti-symmetrize diagonal elements for estimation matrix
     for i in np.arange(M_hat.shape[0]/2):

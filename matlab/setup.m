@@ -34,7 +34,7 @@ plot_phase_dist_nd(data)
 
 K_fit = fit_model(single(data));
 
-% K_error_single = mean(abs(K_true(:)-K_fit(:)));
+K_error_single = mean(abs(K_true(:)-K_fit(:)));
 code_error_single = mean(abs(K_python(:)-K_fit(:)));
 
 %% fit data with double precision

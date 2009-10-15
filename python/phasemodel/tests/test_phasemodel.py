@@ -11,12 +11,18 @@ Tests the accuracy of the algorithm and the code implementation.
 :License: BSD Style
 """
 
+# make sure phasemodel package is in path
+import sys,os
+cwd = os.path.abspath(os.path.split(__file__)[0])
+sys.path.append(os.path.split(os.path.split(cwd)[0])[0])
+
 import numpy as np
 import phasemodel
 
 def test_phasemodel():
     # load test data
-    mdict = np.load('testdata/three_phases_v2.npz')
+    datadir = os.path.join(os.path.split(phasemodel.__file__)[0],'tests','testdata')
+    mdict = np.load(os.path.join(datadir,'three_phases_v2.npz'))
     for var in mdict.files:
         globals()[var] = mdict[var]
 

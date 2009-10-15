@@ -2,16 +2,16 @@
 Test script for hybrid montecarlo sampling.
 """
 
+# make sure phasemodel package is in path
+import sys,os
+cwd = os.path.abspath(os.path.split(__file__)[0])
+sys.path.append(os.path.split(os.path.split(cwd)[0])[0])
+
 import numpy as np
 import phasemodel
-import utils
-import hmc2
-# import f_energy as en
-
-import os
-os.environ['C_INCLUDE_PATH']=np.get_include()
-import pyximport; pyximport.install()
-import f_energy as en
+import phasemodel.utils as utils 
+import phasemodel.hmc2 as hmc2  
+import phasemodel.f_energy as en
 
 def test_hmc_biased():
     # generate random coupling
@@ -26,7 +26,7 @@ def test_hmc_biased():
 
     # some settings
     opts = hmc2.opt(
-        nsamples = 10**4,
+        nsamples = 10**3,
         nomit = 10**3,
         steps = 50,
         stepadj = .15,
@@ -48,7 +48,7 @@ def test_hmc_biased():
 
     print """
 
-    mean-absolute-difference = %6.8f; expect: 0.1
+    mean-absolute-difference = %6.8f; expect: 0.2
 
     """%(K_error)
 

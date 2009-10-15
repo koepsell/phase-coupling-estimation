@@ -2,6 +2,11 @@
 Test script for caching random number generation (for speedup)
 """
 
+# make sure phasemodel package is in path
+import sys,os
+cwd = os.path.abspath(os.path.split(__file__)[0])
+sys.path.append(os.path.split(os.path.split(cwd)[0])[0])
+
 import numpy as np
 from phasemodel import utils
 

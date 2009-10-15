@@ -33,6 +33,7 @@ def main():
            author = 'Various',
            author_email = 'nipy-devel@neuroimaging.scipy.org',
            url = 'http://neuroimaging.scipy.org',
+           zip_safe = False,
            long_description = __doc__,
            configuration = configuration)
 

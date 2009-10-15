@@ -206,7 +206,8 @@ def hmc(f, x, options, gradf, *args, **kargs):
         assert key in options.keys(), 'unknown option %s'%key
 
     options.update(kargs)
-    
+
+"""
 display = options(1);
 if (round(options(5) == 1))
   persistence = 1;
@@ -368,7 +369,4 @@ end
 % Store final momentum value in global so that it can be retrieved later
 HMC_MOM = p;
 return
-
-
-
-
+"""
