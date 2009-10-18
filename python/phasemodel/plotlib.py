@@ -92,4 +92,46 @@ def plot_joint_phasedist_nd(phases,fig=None,**kargs):
                     ax.set_ylabel('')
                 ax.set_title(r'')
 
+def circular_layout(G, start_angle=.5*np.pi, stop_angle=1.5*np.pi, endpoint=True):
+    """circular graph layout
 
+    This function is similar to the circular layout function of networkx,
+    but allows to layout graph nodes on a circle segment. By default, it uses
+    a half-circle .5*pi .. 1.5*pi
+    """
+    import networkx as nx
+    # t = np.arange(start_angle, stop_angle, (stop_angle-start_angle)/len(G), dtype=np.float32)
+    t = np.linspace(start_angle, stop_angle, len(G), endpoint=endpoint)
+    pos = np.transpose(np.array([np.cos(t),np.sin(t)]))
+    return dict(zip(G,pos))
+
+
+def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
+    cmap=plt.cm.Reds, font_size=10, width=4, **kargs):
+    """Plot graph using networkx
+    """
+    try:
+        import networkx as nx
+    except ImportError:
+        print "Warning: can't import networkx"
+        return
+
+    if fig is None and ax is None: fig = plt.figure(1)
+    if ax is None: ax = fig.add_subplot(111)
+    assert weights.ndim == 2, 'weight matrix has to be 2-dimensional'
+    assert weights.shape[0] == weights.shape[1], 'weight matrix has to be square'
+    dim = weights.shape[0]
+    if labels is None: labels = np.arange(dim)
+    
+    G=nx.Graph()
+    G.add_nodes_from(labels)
+
+    for i in xrange(dim):
+        for j in xrange(i+1,dim):
+            G.add_edge(labels[i],labels[j],weight=weights[i,j])
+
+    if pos is None: pos = circular_layout(G,**kargs)
+
+    colors = [e[2]['weight'] for e in G.edges(data=True)]
+    nx.draw(G,pos,ax=ax,edge_color=colors,width=width,edge_cmap=cmap,font_size=font_size)
+    ax.axis('equal')
