@@ -67,7 +67,10 @@ def plot_joint_phasedist_2d(p1,p2,nbins=37,fig=None,ax=None,vmax=0.15,**kargs):
     bins = np.linspace(-np.pi,np.pi,nbins+1)
     phasehist = np.histogram2d(p1,p2,bins=bins)
     ax.imshow(float(nbins)*phasehist[0]/float(nsamples),interpolation='nearest',extent=extent,vmax=vmax,origin='lower',cmap=plt.cm.hot)
-
+    ax.set_xticks([-np.pi,0,np.pi])
+    ax.set_yticks([-np.pi,0,np.pi])
+    ax.set_xticklabels([r'$-\pi$',r'$0$',r'$\pi$'])
+    ax.set_yticklabels([r'$-\pi$',r'$0$',r'$\pi$'])
 
 
 def plot_joint_phasedist_nd(phases,fig=None,**kargs):
@@ -78,10 +81,15 @@ def plot_joint_phasedist_nd(phases,fig=None,**kargs):
         for col in xrange(dim-1):
             if row > col:
                 ax = fig.add_subplot(dim-1,dim-1,(row-1)*(dim-1)+col+1)
-                ax.text(-2.8,1.4,r'$\phi_%d+\phi_%d$'%(row,col),va='top')
                 plot_joint_phasedist_2d(phases[row],phases[col], ax=ax, **kargs)
                 if col == 0: ax.set_ylabel(r'$\phi_%d$'%row)
                 if row == dim-1: ax.set_xlabel(r'$\phi_%d$'%col)
+                if row < dim-1:
+                    ax.set_xticklabels('')
+                    ax.set_xlabel('')
+                if col:
+                    ax.set_yticklabels('')
+                    ax.set_ylabel('')
                 ax.set_title(r'')
 
 
