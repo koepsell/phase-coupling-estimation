@@ -92,6 +92,7 @@ def plot_joint_phasedist_nd(phases,fig=None,**kargs):
                     ax.set_ylabel('')
                 ax.set_title(r'')
 
+
 def circular_layout(G, start_angle=.5*np.pi, stop_angle=1.5*np.pi, endpoint=True):
     """circular graph layout
 
