@@ -109,7 +109,7 @@ def circular_layout(G, start_angle=.5*np.pi, stop_angle=1.5*np.pi, endpoint=True
 
 
 def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
-    cmap=plt.cm.Reds, font_size=10, width=4, **kargs):
+               start_angle=.5*np.pi, stop_angle=1.5*np.pi, endpoint=True, **kargs):
     """Plot graph using networkx
     """
     try:
@@ -132,8 +132,10 @@ def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
         for j in xrange(i+1,dim):
             G.add_edge(labels[i],labels[j],weight=weights[i,j])
 
-    if pos is None: pos = circular_layout(G,**kargs)
+    if pos is None: pos = circular_layout(G, start_angle=start_angle, stop_angle=stop_angle, endpoint=endpoint)
 
+    draw_args = dict(edge_cmap=plt.cm.Reds, font_size=10, width=4)
+    draw_args.update(kargs)
     colors = [e[2]['weight'] for e in G.edges(data=True)]
-    nx.draw(G,pos,ax=ax,edge_color=colors,width=width,edge_cmap=cmap,font_size=font_size)
+    nx.draw(G,pos,ax=ax,edge_color=colors,**draw_args)
     ax.axis('equal')
