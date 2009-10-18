@@ -94,12 +94,11 @@ def plot_joint_phasedist(phases,fig=None,**kargs):
                 ax.set_title(r'')
 
 
-def circular_layout(G, start_angle=.5*np.pi, stop_angle=1.5*np.pi, endpoint=True):
+def circular_layout(G, start_angle=0, stop_angle=2.0*np.pi, endpoint=False):
     """circular graph layout
 
     This function is similar to the circular layout function of networkx,
-    but allows to layout graph nodes on a circle segment. By default, it uses
-    a half-circle .5*pi .. 1.5*pi
+    but allows to layout graph nodes on a circle segment.
     """
     import networkx as nx
     # t = np.arange(start_angle, stop_angle, (stop_angle-start_angle)/len(G), dtype=np.float32)
@@ -132,7 +131,7 @@ def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
         for j in xrange(i+1,dim):
             G.add_edge(labels[i],labels[j],weight=weights[i,j])
 
-    if pos is None: pos = circular_layout(G, start_angle=start_angle, stop_angle=stop_angle, endpoint=endpoint)
+    if pos is None: pos = circular_layout(labels, start_angle=start_angle, stop_angle=stop_angle, endpoint=endpoint)
 
     draw_args = dict(edge_cmap=plt.cm.Reds, font_size=10, width=4)
     draw_args.update(kargs)
