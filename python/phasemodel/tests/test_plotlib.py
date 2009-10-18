@@ -16,7 +16,7 @@ def test_plot_phasedist():
     mdict = np.load(os.path.join(datadir,'three_phases_v2.npz'))
     for var in mdict.files: globals()[var] = mdict[var]
 
-    phasemodel.plotlib.plot_phasedist_nd(data)
+    phasemodel.plotlib.plot_phasedist(data)
 
 
 @nose.tools.nottest
@@ -26,7 +26,8 @@ def test_plot_joint_phasedist():
     mdict = np.load(os.path.join(datadir,'three_phases_v2.npz'))
     for var in mdict.files: globals()[var] = mdict[var]
 
-    phasemodel.plotlib.plot_joint_phasedist_nd(data)
+    phasemodel.plotlib.plot_joint_phasedist(data)
+
 
 @nose.tools.nottest
 def test_plot_graph():
@@ -40,9 +41,10 @@ def test_plot_graph():
     phasemodel.plotlib.plot_graph(np.abs(K_true),start_angle=.5*np.pi,stop_angle=1.5*np.pi,endpoint=True,ax=ax)
     ax = fig.add_subplot(122)
     phasemodel.plotlib.plot_graph(np.abs(K_true),start_angle=0,stop_angle=2*np.pi,endpoint=False,ax=ax)
-    
+
+
 if __name__ == "__main__":
     test_plot_graph()
-    # test_plot_phasedist()
-    # test_plot_joint_phasedist()
+    test_plot_phasedist()
+    test_plot_joint_phasedist()
     plt.show()

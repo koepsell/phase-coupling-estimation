@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import model
 import utils
 
+__all__ = ['plot_phasedist','plot_joint_phasdist','plot_graph']
 
 def plot_phasedist_1d(phases,nbins=37,plot_fit=True,fig=None,ax=None,linewidth=2,**kargs):
     if fig is None and ax is None: fig=plt.figure()
@@ -27,7 +28,7 @@ def plot_phasedist_1d(phases,nbins=37,plot_fit=True,fig=None,ax=None,linewidth=2
     return kappa,mu
 
 
-def plot_phasedist_nd(phases,fig=None,**kargs):
+def plot_phasedist(phases,fig=None,**kargs):
     if fig is None: fig=plt.figure()
     ylim = (0,1.5)
 
@@ -73,7 +74,7 @@ def plot_joint_phasedist_2d(p1,p2,nbins=37,fig=None,ax=None,vmax=0.15,**kargs):
     ax.set_yticklabels([r'$-\pi$',r'$0$',r'$\pi$'])
 
 
-def plot_joint_phasedist_nd(phases,fig=None,**kargs):
+def plot_joint_phasedist(phases,fig=None,**kargs):
     if fig is None: fig=plt.figure()
 
     dim = phases.shape[0]
