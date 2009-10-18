@@ -4,8 +4,8 @@ Test script for hybrid montecarlo sampling.
 
 # make sure phasemodel package is in path
 import sys,os
-cwd = os.path.abspath(os.path.split(__file__)[0])
-sys.path.append(os.path.split(os.path.split(cwd)[0])[0])
+cwd = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0,os.path.join(cwd,"..",".."))
 
 import numpy as np
 import phasemodel
@@ -15,7 +15,7 @@ import phasemodel.f_energy as en
 
 def test_hmc_gen():
     # load test data
-    datadir = os.path.join(os.path.split(phasemodel.__file__)[0],'tests','testdata')
+    datadir = os.path.join(os.path.dirname(phasemodel.__file__),'tests','testdata')
     mdict = np.load(os.path.join(datadir,'three_phases_gen_v2.npz'))
     for var in mdict.files:
         globals()[var] = mdict[var]

@@ -3,9 +3,7 @@ Phasemodel Package: XXX: put some short description here
 
 The module has several sub-modules: 
 
-- ``core``: contains the main fitting routines
-
-- ``model``: contains modeling code (copied from neuropy, should probably factored away)
+- ``model``: contains the main fitting routines
 
 - ``utils``: cantain various utilities
 
@@ -34,9 +32,16 @@ if __use_cython__:
         print "Warning: Could not find pyximport"
         __use_cython__ = False
 
-import core, model, utils, plotlib, f_energy
+#
+# load (and reload) modules
+#
+modules = ['model','utils','plotlib','f_energy']
+for name in modules:
+    mod = __import__(name,globals(),locals(),[])
+    # reload modules (useful during development)
+    reload(mod)
 
-from core import *
+from model import *
 
 from numpy.testing import Tester
 test = Tester().test
