@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import model
 import utils
 
-__all__ = ['plot_phasedist','plot_joint_phasdist','plot_graph']
+__all__ = ['plot_phasedist','plot_joint_phasdist','plot_graph','plot_matrix']
 
 def plot_phasedist_1d(phases,nbins=37,plot_fit=True,fig=None,ax=None,linewidth=2,**kargs):
     if fig is None and ax is None: fig=plt.figure()
@@ -138,3 +138,28 @@ def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
     colors = [e[2]['weight'] for e in G.edges(data=True)]
     nx.draw(G,pos,ax=ax,edge_color=colors,**draw_args)
     ax.axis('equal')
+
+
+def plot_matrix(weights, labels=None, fig=None, ax=None, **kargs):
+    """Plot weight matrix
+    """
+    if fig is None and ax is None: fig = plt.figure(1)
+    if ax is None: ax = fig.add_subplot(111)
+    assert weights.ndim == 2, 'weight matrix has to be 2-dimensional'
+    assert weights.shape[0] == weights.shape[1], 'weight matrix has to be square'
+    dim = weights.shape[0]
+    if labels is None: labels = np.arange(dim)
+
+    vmax = kargs.get('vmax',weights.max())
+    plot_args = dict(interpolation='nearest', vmin=0, vmax=vmax, cmap=plt.cm.Reds, origin='lower')
+    plot_args.update(**kargs)
+    ax.imshow(weights,**plot_args)
+
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    ax.set_xticks(xrange(dim))
+    ax.set_xticklabels(labels)
+    ax.set_yticks(xrange(dim))
+    ax.set_yticklabels(labels)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
