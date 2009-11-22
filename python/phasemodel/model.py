@@ -62,12 +62,23 @@ def mises_params(direction,n=1):
                  (24.*z-132.*z**2+76.*z**3-9.*z**4)/(288.*n**2))
     return kappa,mu,p
 
-def phasecorr(phi,get_kappa=False):
+def phasecorr(phi,get_kappa=False,get_bias=False):
     d = phi.shape[0]
     cpos = np.zeros((d,d),'D')
     cneg = np.zeros((d,d),'D')
     for i in range(d-1):
+        if get_bias:
+            print "[%d]"%i,
+            if get_kappa:
+                (kappa,mu,p,n) = phasedist(phi[i,:])
+                cneg[i,i] = kappa*np.exp(-1j*mu)
+                (kappa,mu,p,n) = phasedist(2*phi[i,:])
+                cpos[i,i] = kappa*np.exp(-1j*mu)
+            else:
+                cneg[i,i] = circular_mean(phi[i,:])
+                cpos[i,i] = circular_mean(2*phi[i,:])
         for j in range(i+1,d):
+            print "[%d,%d]"%(i,j),
             if get_kappa:
                 (kappa,mu,p,n) = phasedist(phi[i,:]-phi[j,:])
                 cneg[i,j] = kappa*np.exp(-1j*mu)
@@ -333,7 +344,7 @@ for (int i0=0; i0 < d; i0++) {
 // std::cout << "matrix elements needed: " << ia+1 << std::endl;
 """
 
-def sample_hmc_mlabwrap(m,nsamples,burnin=1000,steps=10,step_sz=.2,diagnostics=False,persistence=0):
+def sample_hmc(m,nsamples,burnin=1000,steps=10,step_sz=.2,diagnostics=False,persistence=0):
     from hmc2 import opt, hmc2
     from f_energy import f_phasedist, g_phasedist
     opts = opt(nsamples=nsamples,nomit=burnin,steps=steps,stepadj=step_sz,
@@ -348,6 +359,31 @@ def sample_hmc_mlabwrap(m,nsamples,burnin=1000,steps=10,step_sz=.2,diagnostics=F
         return smod(samps.T),E,diagn
     else:
         return smod(samps.T)
+
+
+def density_from_coupling(phi,K):
+    """Returns the (un-normalized) probablility density
+       based on multivariate phase data and given coupling.
+    """
+    assert phi.ndim == 2, 'data has to be two-dimensional'
+    assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'    
+    x = np.exp(1j*phi)
+    E = np.diag(np.dot(np.dot(x.T.conj(),K),x))
+    return np.exp(-E)
+
+
+def density_from_coupling_biased(phi,K):
+    """Returns the (un-normalized) probablility density
+       based on multivariate phase data and given coupling.
+    """
+    assert phi.ndim == 2, 'data has to be two-dimensional'
+    assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'    
+    d,nsamples = phi.shape
+    phib = np.zeros((d+1,nsamples))
+    phib[0,:] = 0
+    phib[1:,:] = phi
+    return density_from_coupling(phib,K)
+
 
 def sample_hmc_mlabwrap(m,nsamples,burnin=1000,steps=10,step_sz=.2,diagnostics=False,persistence=0):
     from scikits.mlabwrap import mlab
@@ -387,7 +423,7 @@ def timing_benchmark(eval_dim=None,dims=[2, 4, 6, 8, 10],nsamps=10**4):
         return pol
 
 if __name__ == '__main__':
-    from plotlib import plot_phasedist3d
+    from plotlib import plot_phasedist
     dim = 3
 
     M = np.random.randn(2*dim,2*dim)
@@ -441,8 +477,8 @@ if __name__ == '__main__':
 
     print
     plt.ioff()
-    plot_phasedist3d(phi)
-    plot_phasedist3d(phi_hat)
+    plot_phasedist(phi)
+    plot_phasedist(phi_hat)
     plt.ion()
     plt.show()
 
