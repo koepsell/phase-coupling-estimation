@@ -41,8 +41,9 @@ for name in modules:
     # reload modules (useful during development)
     reload(mod)
 
-from model import *
-
-from numpy.testing import Tester
-test = Tester().test
-bench = Tester().bench
+# These lines commented out because "Tester" not in all versions of Numpy
+#from model import *
+#
+#from numpy.testing import Tester
+#test = Tester().test
+#bench = Tester().bench

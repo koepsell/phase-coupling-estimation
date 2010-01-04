@@ -18,6 +18,7 @@ sys.path.insert(0,os.path.join(cwd,"..",".."))
 
 import numpy as np
 import phasemodel
+reload(phasemodel)
 
 def test_phasemodel():
     # load test data
@@ -27,7 +28,7 @@ def test_phasemodel():
         globals()[var] = mdict[var]
 
     # fit test data
-    K_fit = phasemodel.fit_model(data);
+    K_fit = phasemodel.model.fit_model(data);
 
     print K_true
     print K_fit
@@ -44,5 +45,32 @@ def test_phasemodel():
 
     np.testing.assert_almost_equal(code_error,0)
 
+def test_reg_phasemodel():
+    # load test data
+    datadir = os.path.join(os.path.dirname(phasemodel.__file__),'tests','testdata')
+    mdict = np.load(os.path.join(datadir,'three_phases_v2.npz'))
+    for var in mdict.files:
+        globals()[var] = mdict[var]
+
+    subsampled_data = data[:,::100].copy()
+    # fit test data
+    eps = 18.
+    K_fit = phasemodel.model.fit_model(subsampled_data,eps);
+
+    print K_true
+    print K_fit
+
+    K_error = (abs(K_true-K_fit)).mean()
+
+    print 'eps = ', eps
+    print """
+
+    mean-absolute-difference = %6.8f; expect: 0.05714995
+
+    """%(K_error)
+
+    #np.testing.assert_almost_equal(K_error,0.05714995)
+
 if __name__ == '__main__':
-    test_phasemodel()
+    #test_phasemodel()
+    test_reg_phasemodel()

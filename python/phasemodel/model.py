@@ -147,7 +147,7 @@ def kappa2m(n,p=None):
     m[::2,1::2] = -dt
     return m
 
-def fit_model(phi):
+def fit_model(phi, eps=0.):
     assert phi.ndim == 2, 'data has to be two-dimensional'
     assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'    
     z = np.concatenate((np.exp(1j*phi),np.exp(-1j*phi)))
@@ -168,9 +168,19 @@ def fit_model(phi):
     toc('weave')
 
     tic('matrix inversion')
-    k_vec = dsolve.spsolve(a.tocsr(),b)
-    k_mat = np.zeros((d,d),complex)
-    k_mat.T[np.where(np.diag(np.ones(d))-1)] = k_vec
+    if eps > 0:
+        a2 = np.dot(a.T,a) + eps*nz*sparse.eye(nij,nij,format='coo')
+        b2 = np.dot(a.todense().T,np.atleast_2d(b).T)
+        # this sparse multiplication is buggy !!!!, I can't get the shape of b2 to be = (b.size,)
+        b3 = b2.copy().flatten().T
+        b3.shape = (b3.size,)
+        k_vec = dsolve.spsolve(a2.tocsr(),b3)
+        k_mat = np.zeros((d,d),complex)
+        k_mat.T[np.where(np.diag(np.ones(d))-1)] = k_vec.ravel()
+    else:
+        k_vec = dsolve.spsolve(a.tocsr(),b)
+        k_mat = np.zeros((d,d),complex)
+        k_mat.T[np.where(np.diag(np.ones(d))-1)] = k_vec
     toc('matrix inversion')
     return k_mat
 
