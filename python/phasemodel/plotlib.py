@@ -107,7 +107,7 @@ def circular_layout(G, start_angle=0, stop_angle=2.0*np.pi, endpoint=False):
     return dict(zip(G,pos))
 
 
-def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
+def plot_graph(weights, labels=None, pos=None, fig=None, ax=None, threshold=0,
                start_angle=.5*np.pi, stop_angle=1.5*np.pi, endpoint=True, **kargs):
     """Plot graph using networkx
     """
@@ -127,16 +127,20 @@ def plot_graph(weights, labels=None, pos=None, fig=None, ax=None,
     G=nx.Graph()
     G.add_nodes_from(labels)
 
+    edges = []
     for i in xrange(dim):
         for j in xrange(i+1,dim):
-            G.add_edge(labels[i],labels[j],weight=weights[i,j])
+            edges.append((abs(weights[i,j]),labels[i],labels[j],weights[i,j]))
+
+    edgelist = [(l1,l2,w) for absw, l1, l2, w in sorted(edges) if absw>threshold]
+    edgecolors = [e[2] for e in edgelist]
+    for l1, l2, w in edgelist: G.add_edge(l1,l2,weight=w)
 
     if pos is None: pos = circular_layout(labels, start_angle=start_angle, stop_angle=stop_angle, endpoint=endpoint)
 
     draw_args = dict(edge_cmap=plt.cm.Reds, font_size=10, width=4)
     draw_args.update(kargs)
-    colors = [e[2]['weight'] for e in G.edges(data=True)]
-    nx.draw(G,pos,ax=ax,edge_color=colors,**draw_args)
+    nx.draw(G,pos,ax=ax,edge_color=edgecolors,edgelist=edgelist,**draw_args)
     ax.axis('equal')
 
 

@@ -11,7 +11,7 @@
    this function included in the Software for Flexible Bayesian Modeling
    written by Radford Neal <http://www.cs.toronto.edu/~radford/fbm.software.html>.
    
-       Copyright (c) 1996-1998 Ian T Nabney
+       Copyright (c) 1996-2001 Ian T. Nabney
        Copyright (c) 1998-2000 Aki Vehtari
        Copyright (c) 2008-2009 Kilian Koepsell
 
@@ -91,8 +91,18 @@ class opt(object):
 
 def test_default_opt():
     import nose
+    default_options = dict(display=False,
+                           chckgrad=False,
+                           steps=1,
+                           nsamples=1,
+                           nomit=0,
+                           persistence=False,
+                           decay=0.9,
+                           stepadj=0.2,
+                           stepsf=None,
+                           window=1)
     myopt = opt()
-    for key,val in options.items():
+    for key,val in default_options.items():
         yield nose.tools.assert_equal, getattr(myopt,key), val
 
 def test_set_opt():
