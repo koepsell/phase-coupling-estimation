@@ -29,10 +29,10 @@ def main():
     from numpy.distutils.core import setup
     
     setup( name = 'phasemodel',
-           description = 'Nitime: timeseries analysis for neuroscience data',
-           author = 'Various',
-           author_email = 'nipy-devel@neuroimaging.scipy.org',
-           url = 'http://neuroimaging.scipy.org',
+           description = 'Phase Coupling Estimation from Multivariate Phase Statistics.',
+           author = 'Charles Cadieu, Kilian Koepsell',
+           author_email = 'cadieu@berkeley.edu, kilian@berkeley.edu',
+           url = 'http://redwood.berkeley.edu/',
            zip_safe = False,
            long_description = __doc__,
            configuration = configuration)
