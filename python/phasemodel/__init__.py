@@ -21,7 +21,7 @@ from version import version as __version__
 __status__   = 'alpha'
 __url__     = 'http://redwood.berkeley.edu'
 
-__use_cython__ = True
+__use_cython__ = False
 if __use_cython__:
     try:
         import os
