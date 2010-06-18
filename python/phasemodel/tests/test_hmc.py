@@ -13,6 +13,8 @@ import phasemodel.utils as utils
 import phasemodel.hmc2 as hmc2
 import phasemodel.f_energy as en
 
+from phasemodel.circstats import kappa2m
+
 def test_hmc():
     # load test data
     datadir = os.path.join(os.path.dirname(phasemodel.__file__),'tests','testdata')
@@ -23,7 +25,7 @@ def test_hmc():
     sz = K_true.shape[0] 
 
     # convert coupling from complex 3x3 to real 6x6 matrix
-    M = phasemodel.kappa2m(K_true);
+    M = kappa2m(K_true);
 
     # some settings
     opts = hmc2.opt(
@@ -40,7 +42,7 @@ def test_hmc():
     utils.toc()
 
     # fit test data
-    K_fit = phasemodel.fit_model(data);
+    K_fit = phasemodel.model.fit_model(data);
 
     print K_true
     print K_fit

@@ -13,6 +13,8 @@ import phasemodel.utils as utils
 import phasemodel.hmc2 as hmc2  
 import phasemodel.f_energy as en
 
+from phasemodel.circstats import kappa2m
+
 def test_hmc_biased():
     # generate random coupling
     dim = 5
@@ -22,7 +24,7 @@ def test_hmc_biased():
     K_true = .5*(K_true+np.conj(K_true.T))
 
     # convert coupling from complex 3x3 to real 6x6 matrix
-    M = phasemodel.kappa2m(K_true);
+    M = kappa2m(K_true);
 
     # some settings
     opts = hmc2.opt(
@@ -39,7 +41,7 @@ def test_hmc_biased():
     utils.toc()
 
     # fit test data
-    K_fit = phasemodel.fit_model_biased(data);
+    K_fit = phasemodel.model.fit_model_biased(data);
 
     print K_true
     print K_fit

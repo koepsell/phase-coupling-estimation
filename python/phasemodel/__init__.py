@@ -35,14 +35,16 @@ if __use_cython__:
 #
 # load (and reload) modules
 #
-modules = ['model','utils','plotlib','f_energy']
+modules = ['model','utils','circstats','plotlib','f_energy']
 for name in modules:
     mod = __import__(name,globals(),locals(),[])
     # reload modules (useful during development)
     reload(mod)
 
+# from model import *
+# from circstats import *
+
 # These lines commented out because "Tester" not in all versions of Numpy
-#from model import *
 #
 #from numpy.testing import Tester
 #test = Tester().test

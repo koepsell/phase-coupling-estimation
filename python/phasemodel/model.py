@@ -3,21 +3,24 @@ This module contains functions to model univariate and multivariate
 phase distributions and to fit them to data.
 """
 
-# load numpy, scipy, etc.
+__all__ = ['fit_model', 'fit_gen_model']
+
+
+import os, sys
 import numpy as np
 import scipy as sp
-from scipy import io,sparse,weave
-from scipy.sparse.linalg import isolve,dsolve
-import matplotlib.pyplot as plt
-import sys
 
 from utils import tic,toc,smod
+from circstats import m_vec2mat
 
-try:
-    from rpy import r as R
-    R.library("CircStats")
-except:
-    print "could not load R-project"
+from scipy import sparse
+from scipy.sparse.linalg import isolve,dsolve
+from model_weave import fill_model_matrix, fill_gen_model_matrix
+
+os.environ['C_INCLUDE_PATH']=np.get_include()
+import pyximport; pyximport.install()
+# from model_cython import fit_model
+
 
 #
 # pretty printing of matices/arrays
@@ -25,162 +28,17 @@ except:
 #
 np.set_printoptions(linewidth=195,precision=4)
 
-def circular_mean(phases):
-    return np.mean(np.exp(1j*phases))
-
-def circular_correlation(phases1,phases2):
-    return circular_mean(phases2-phases1)
-
-def circular_variance(phases):
-    return 1-abs(circular_mean(phases))**2
-
-
-def phasedist(phases):
-    "Returns parameters of Von Mises distribution fitted to phase data"
-    n = len(phases)
-    (kappa,mu,p) = mises_params(circular_mean(phases),n)
-    return (kappa,mu,p,n)
-
-def mises(phi,kappa,mu):
-    "Returns the Von Mises distribution with mean mu and concentration kappa"
-    from scipy.special import i0
-    return (1./(2.*np.pi*i0(kappa)))*np.exp(kappa*np.cos(phi-mu))
-
-def mises_params(direction,n=1):
-    from scipy.optimize import fmin
-    from scipy.special import i0,i1
-    "Computes parameters of Von Mises distribution from direction vector"
-    def bess(x,r):
-        return (i1(x)/i0(x)-r)**2
-    try: # using R (faster by a factor of 10)
-        kappa = R.A1inv(np.abs(direction))
-    except:
-        kappa = float(fmin(bess,np.array([1.]),(np.abs(direction),),disp=0));
-    mu = np.angle(direction)
-    z = float(n)*np.abs(direction)**2
-    p = np.exp(-z)*(1.+(2.*z-z**2)/(4.*n)-
-                 (24.*z-132.*z**2+76.*z**3-9.*z**4)/(288.*n**2))
-    return kappa,mu,p
-
-def phasecorr(phi,get_kappa=False,get_bias=False):
-    d = phi.shape[0]
-    cpos = np.zeros((d,d),'D')
-    cneg = np.zeros((d,d),'D')
-    for i in range(d-1):
-        if get_bias:
-            print "[%d]"%i,
-            if get_kappa:
-                (kappa,mu,p,n) = phasedist(phi[i,:])
-                cneg[i,i] = kappa*np.exp(-1j*mu)
-                (kappa,mu,p,n) = phasedist(2*phi[i,:])
-                cpos[i,i] = kappa*np.exp(-1j*mu)
-            else:
-                cneg[i,i] = circular_mean(phi[i,:])
-                cpos[i,i] = circular_mean(2*phi[i,:])
-        for j in range(i+1,d):
-            print "[%d,%d]"%(i,j),
-            if get_kappa:
-                (kappa,mu,p,n) = phasedist(phi[i,:]-phi[j,:])
-                cneg[i,j] = kappa*np.exp(-1j*mu)
-                cneg[j,i] = np.conj(cneg[i,j])
-                (kappa,mu,p,n) = phasedist(phi[i,:]+phi[j,:])
-                cpos[i,j] = cpos[j,i] = kappa*np.exp(-1j*mu)
-            else:
-                cneg[i,j] = circular_mean(-phi[i,:]+phi[j,:])
-                cneg[j,i] = np.conj(cneg[i,j])
-                cpos[i,j] = cpos[j,i] = circular_mean(phi[i,:]+phi[j,:])
-    return cneg,cpos
-
-
-def p2torus(phi):
-    (dims, samps) = phi.shape
-    ptorus = np.zeros((2*dims,samps))
-    ptorus[::2,:] = np.cos(phi)
-    ptorus[1::2,:] = np.sin(phi)
-    return ptorus
-
-def torus2p(x):
-    return np.arctan2(x[1::2,:],x[::2,:])
-
-def p2dtorus(phi):
-    (dims, samps) = phi.shape
-    dtorus = np.zeros((2*dims,samps))
-    dtorus[::2,:] = -np.sin(phi)
-    dtorus[1::2,:] = np.cos(phi)
-    return dtorus
-
-def m_vec2mat(m_vec):
-    sz = np.sqrt(len(m_vec))
-    m = m_vec.copy()
-    m.shape = (sz,sz)
-    return m
-
-def m_mat2vec(m):
-    return m.flatten()
-
-def m2kappa(m):
-    """
-    convert real 2N x 2N coupling matrix into
-    complex N x N coupling matrices kappa+ and kappa-
-    """
-    c = -m[::2,::2]
-    s = -m[1::2,1::2]
-    d = -m[1::2,::2]
-    p = .5*(c-s) + .5j*(d.T+d)
-    n = .5*(c+s) + .5j*(d.T-d)
-    # p = .5*(d.T+d) + .5j*(c-s)
-    # n = .5*(d.T-d) + .5j*(c+s)
-    return n,p
-
-def kappa2m(n,p=None):
-    """
-    convert complex N x N coupling matrices kappa+ and kappa-
-    into real 2N x 2N coupling matrix
-    """
-    sz = n.shape[0]
-    if p is None:
-        c = n.real
-        s = n.real
-        d = -n.imag
-        dt = n.imag
-    else:
-        c = n.real+p.real
-        s = n.real-p.real
-        d  = -n.imag+p.imag
-        dt = n.imag+p.imag
-        # c = n.imag+p.imag
-        # s = n.imag-p.imag
-        # d = n.real.T+p.real.T
-    m = np.zeros((2*sz,2*sz),float)
-    m[::2,::2] = -c
-    m[1::2,1::2] = -s
-    m[1::2,::2] = -d
-    m[::2,1::2] = -dt
-    return m
-
 def fit_model(phi, eps=0.):
     assert phi.ndim == 2, 'data has to be two-dimensional'
     assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'    
-    z = np.concatenate((np.exp(1j*phi),np.exp(-1j*phi)))
-    d = phi.shape[0]
-    nz = phi.shape[1]
-    z.shape = (2,d,nz)
+    d,nsamples = phi.shape
     nij = d**2-d # number of coupling terms
-    na = 4*d**3-10*d**2+6*d # upper bound for number of elements in sparse matrix
-    adata = np.zeros(na,complex)
-    arow = np.zeros(na,int)
-    acol = np.zeros(na,int)
-    b = np.zeros(nij,complex)
 
-    tic('weave')
-    weave.inline(phasemodel_code_blitz, ['z','adata','arow','acol','b'],
-                 type_converters=weave.converters.blitz)
-    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
-    toc('weave')
+    a, b = fill_model_matrix(phi)
 
     tic('matrix inversion')
     if eps > 0:
-        a2 = np.dot(a.T,a) + eps*nz*sparse.eye(nij,nij,format='coo')
+        a2 = np.dot(a.T,a) + eps*nsamples*sparse.eye(nij,nij,format='coo')
         b2 = np.dot(a.todense().T,np.atleast_2d(b).T)
         # this sparse multiplication is buggy !!!!, I can't get the shape of b2 to be = (b.size,)
         b3 = b2.copy().flatten().T
@@ -199,71 +57,10 @@ def fit_model_biased(phi):
     return fit_model(np.vstack((np.zeros(phi.shape[1]),phi)))
 
 
-phasemodel_code_blitz = """
-int d = Nz[1];
-int nz = Nz[2];
-int na = Nadata[0];
-int nij = Nb[0];
-int ij = -1;
-int kl = -1;
-int ia = -1;
-std::cout << "starting complex weave code (difference coupling only)" << std::endl;
-ij = -1;
-ia = -1;
-for (int i=0; i < d; i++)
-{
-    for (int j=0; j < d; j++)
-    {
-        if (i==j) continue;
-        ij++;
-        kl = -1;
-        // b = -2*conj(C)
-        // b_ij = -2*w(i)*z(j)
-        for (int n=0; n < nz; n++) b(ij) -= 2.*z(1,i,n)*z(0,j,n);
-        for (int k=0; k < d; k++)
-        {
-            for (int l=0; l < d; l++)
-            {
-                if (k==l) continue;
-                kl++;
-                if (i!=k and i!=l and j!=k and j!=l) continue;
-                // a = .5*m.T*C.T + .5*C.T*m.T - .5*conj(Q)*m*P - .5*conj(P)*m*Q
-                // a_ij_kl = .5*d_i_l*C_j_k + .5*d_k_j*C_l_i - .5*conj(Q)_i_k*P_l_j - .5*conj(P)_i_k*Q_l_j
-                //         = .5*d_i_l*z(j)*w(k) + .5*d_k_j*z(l)*w(i) - .5*d_i_k*w(i)*w(k)*z(l)*z(j) - .5*d_l_j*w(i)*w(k)*z(l)*z(j)
-                ia++;
-                arow(ia) = ij;
-                acol(ia) = kl;
-                if (i==k) for (int n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
-                if (i==l) for (int n=0; n < nz; n++) adata(ia) += .5*z(0,j,n)*z(1,k,n);
-                if (j==k) for (int n=0; n < nz; n++) adata(ia) += .5*z(1,i,n)*z(0,l,n);
-                if (j==l) for (int n=0; n < nz; n++) adata(ia) -= .5*z(1,i,n)*z(1,k,n)*z(0,l,n)*z(0,j,n);
-            }
-        }
-    }
-}
-// std::cout << "number of sparse matrix elements:" << ia+1 <<std::endl;
-"""
-
 def fit_gen_model(phi):
     assert phi.ndim == 2, 'data has to be two-dimensional'
-    assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'    
-    d,nsamples = phi.shape
-    x = p2torus(phi)
-    q = p2dtorus(phi)
-    x.shape = (d,2,nsamples)
-    q.shape = (d,2,nsamples)
-
-    nij = 4*d**2 # number of coupling terms
-    na = 32*d**3 - 16*d**2 # number of elements in large matrix multiplying mij
-    adata = np.zeros(na,float)
-    arow = np.zeros(na,int)
-    acol = np.zeros(na,int)
-    b = np.zeros(nij,float)
-
-    tic('weave')
-    weave.inline(gen_phasemodel_code, ['x','q','adata','arow','acol','b'])
-    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
-    toc('weave')
+    assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'
+    a, b = fill_gen_model_matrix(phi)
 
     tic('matrix inversion')
     m_vec,flag = isolve.cg(a.tocsr(),b)
@@ -277,82 +74,6 @@ def fit_gen_model_biased(phi):
     return fit_gen_model(np.vstack((np.zeros(phi.shape[1]),phi)))
 
 
-gen_phasemodel_code = """
-int d = Nx[0];
-int ny = Nx[1];
-int nx = Nx[2];
-int na = Nadata[0];
-int i,j,k,l;
-int ij = -1;
-int kl = -1;
-int ia = -1;
-ij = -1;
-ia = -1;
-double temp;
-for (int i0=0; i0 < d; i0++) {
-  for (int i1=0; i1 < 2; i1++) {
-    for (int j0=0; j0 < d; j0++) {
-      for (int j1=0; j1 < 2; j1++) {
-        i = 2*i0+i1;
-        j = 2*j0+j1;
-        ij++;
-        // b = (Q-C)
-        if (i0==j0) {
-          for (int n=0; n < nx; n++) {
-            temp  = 2.;
-            temp *= q[(i0*ny+i1)*nx+n];
-            temp *= q[(j0*ny+j1)*nx+n];
-            b[ij] -= temp;
-          }
-        }
-        for (int n=0; n < nx; n++) {
-          temp = 2.;
-          temp *= x[(i0*ny+i1)*nx+n];
-          temp *= x[(j0*ny+j1)*nx+n];
-          b[ij] += temp;
-        }
-        kl = -1;
-        for (int k0=0; k0 < d; k0++) {
-          for (int k1=0; k1 < 2; k1++) {
-            for (int l0=0; l0 < d; l0++) {
-              for (int l1=0; l1 < 2; l1++) {
-                k = 2*k0+k1;
-                l = 2*l0+l1;
-                kl++;
-                if (i0!=k0 and j0!=l0) continue;
-                ia++;
-                //a = (np.tensordot(C[:,k,:],Q[l,:,:],axes=(1,1)) +
-                //     np.tensordot(Q[:,k,:],C[l,:,:],axes=(1,1)))
-                arow[ia] = ij;
-                acol[ia] = kl;
-                if (j0==l0) {
-                  for (int n=0; n < nx; n++) {
-                    temp =  x[(i0*ny+i1)*nx+n];
-                    temp *= x[(k0*ny+k1)*nx+n];
-                    temp *= q[(l0*ny+l1)*nx+n];
-                    temp *= q[(j0*ny+j1)*nx+n];
-                    adata[ia] += temp;
-                  }
-                }
-                if (i0==k0) {
-                  for (int n=0; n < nx; n++) {
-                    temp =  q[(i0*ny+i1)*nx+n];
-                    temp *= q[(k0*ny+k1)*nx+n];
-                    temp *= x[(l0*ny+l1)*nx+n];
-                    temp *= x[(j0*ny+j1)*nx+n];
-                    adata[ia] += temp;
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-// std::cout << "matrix elements needed: " << ia+1 << std::endl;
-"""
 
 def sample_hmc(m,nsamples,burnin=1000,steps=10,step_sz=.2,diagnostics=False,persistence=0):
     from hmc2 import opt, hmc2
@@ -433,6 +154,7 @@ def timing_benchmark(eval_dim=None,dims=[2, 4, 6, 8, 10],nsamps=10**4):
         return pol
 
 if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     from plotlib import plot_phasedist
     dim = 3
 
@@ -495,6 +217,7 @@ if __name__ == '__main__':
 
 
 
+    # from scipy import io
     # mdict = io.loadmat('testdata/three_phases_gen')
     # vars().update(mdict); M=M_true; M_hat=M_python; phi=data;
     #
@@ -505,6 +228,7 @@ if __name__ == '__main__':
 
 
 
+    # from scipy import io
     # mdict = np.load('testdata/three_phases_gen.npz')
     # for var in mdict.files:
     #     globals()[var] = mdict[var]

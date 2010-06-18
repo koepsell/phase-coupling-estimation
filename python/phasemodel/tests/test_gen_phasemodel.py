@@ -4,7 +4,10 @@ Tests the accuracy of the algorithm and the code implementation.
 :Authors: Charles Cadieu <cadieu@berkeley.edu> and
           Kilian Koepsell <kilian@berkeley.edu>
 
-:Copyright: 2008, UC Berkeley
+:Reference: Cadieu CF, Koepsell K (2010) Phase coupling estimation from
+            multivariate phase statistics. Neural Computation (in press).
+
+:Copyright: 2008-2010, UC Berkeley
 :License: BSD Style
 """
 
@@ -24,7 +27,7 @@ def test_gen_phasemodel():
         globals()[var] = mdict[var]
 
     # fit test data
-    M_fit = phasemodel.fit_gen_model(data);
+    M_fit = phasemodel.model.fit_gen_model(data);
 
     print M_true
     print M_fit
@@ -42,4 +45,7 @@ def test_gen_phasemodel():
     np.testing.assert_almost_equal(code_error,0)
 
 if __name__ == '__main__':
-    test_gen_phasemodel()
+    import nose
+    nose.runmodule()
+    
+    # test_gen_phasemodel()

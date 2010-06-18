@@ -37,7 +37,7 @@ def test_hmc_gen():
     utils.toc()
 
     # fit test data
-    M_fit = phasemodel.fit_gen_model(data);
+    M_fit = phasemodel.model.fit_gen_model(data);
 
     print M_true
     print M_fit

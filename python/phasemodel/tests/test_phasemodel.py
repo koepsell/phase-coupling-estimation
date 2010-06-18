@@ -4,10 +4,10 @@ Tests the accuracy of the algorithm and the code implementation.
 :Authors: Charles Cadieu <cadieu@berkeley.edu> and
           Kilian Koepsell <kilian@berkeley.edu>
 
-:Reference: C. Cadieu and K. Koepsell, A Multivaraite Phase Distribution and its
-            Estimation, NIPS, 2009 (in submission).
+:Reference: Cadieu CF, Koepsell K (2010) Phase coupling estimation from
+            multivariate phase statistics. Neural Computation (in press).
 
-:Copyright: 2008, UC Berkeley
+:Copyright: 2008-2010, UC Berkeley
 :License: BSD Style
 """
 
@@ -18,7 +18,6 @@ sys.path.insert(0,os.path.join(cwd,"..",".."))
 
 import numpy as np
 import phasemodel
-reload(phasemodel)
 
 def test_phasemodel():
     # load test data
@@ -65,12 +64,15 @@ def test_reg_phasemodel():
     print 'eps = ', eps
     print """
 
-    mean-absolute-difference = %6.8f; expect: 0.05714995
+    mean-absolute-difference = %6.8f; expect: 0.15093053
 
     """%(K_error)
 
-    #np.testing.assert_almost_equal(K_error,0.05714995)
+    np.testing.assert_almost_equal(K_error, 0.15093053)
 
 if __name__ == '__main__':
-    #test_phasemodel()
-    test_reg_phasemodel()
+    import nose
+    nose.runmodule()
+
+    # test_phasemodel()
+    # test_reg_phasemodel()
