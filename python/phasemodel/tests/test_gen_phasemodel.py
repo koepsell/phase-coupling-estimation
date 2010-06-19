@@ -46,6 +46,9 @@ def test_gen_phasemodel():
 
 
 def test_compare_weave_cython():
+    from nose.plugins.skip import SkipTest
+    if not phasemodel.__use_weave__ or not phasemodel.__use_cython__: raise SkipTest()
+
     from phasemodel.model_weave import fill_gen_model_matrix
     from phasemodel.model_cython import fill_gen_model_matrix as cfill_gen_model_matrix
 

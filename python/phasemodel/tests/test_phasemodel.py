@@ -71,6 +71,9 @@ def test_reg_phasemodel():
     np.testing.assert_almost_equal(K_error, 0.15093053)
 
 def test_compare_weave_cython():
+    from nose.plugins.skip import SkipTest
+    if not phasemodel.__use_weave__ or not phasemodel.__use_cython__: raise SkipTest()
+
     from phasemodel.model_weave import fill_model_matrix
     from phasemodel.model_cython import fill_model_matrix as cfill_model_matrix
 

@@ -21,7 +21,7 @@ from version import version as __version__
 __status__   = 'alpha'
 __url__     = 'http://redwood.berkeley.edu'
 
-__use_cython__ = False
+__use_cython__ = True
 if __use_cython__:
     try:
         import os
@@ -29,8 +29,26 @@ if __use_cython__:
         os.environ['C_INCLUDE_PATH']=np.get_include()
         import pyximport; pyximport.install()
     except:
-        print "Warning: Could not find pyximport"
+        print "WARNING: Could not load pyximport"
         __use_cython__ = False
+
+__use_weave__ = True
+if __use_weave__:
+    try:
+        from scipy import weave
+        weave.inline('printf("weave works!\n"')
+    except:
+        print "WARNING: Coul not load weave"
+        __use_weave__ = False
+
+__use_R__ = True
+if __use_R__:
+    try:
+        from rpy import r as R
+        R.library("CircStats")
+    except:
+        print "WARNING: Could not load R-project"
+        __use_R__ = False
 
 #
 # load (and reload) modules

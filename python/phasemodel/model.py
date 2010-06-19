@@ -13,7 +13,8 @@ phase distributions and to fit them to data.
 """
 
 __all__ = ['fit_model', 'fit_gen_model']
-
+from . import __use_weave__
+from . import __use_cython__
 
 import os, sys
 import numpy as np
@@ -26,10 +27,14 @@ from scipy import sparse
 from scipy.sparse.linalg import isolve,dsolve
 from model_weave import fill_model_matrix, fill_gen_model_matrix
 
-os.environ['C_INCLUDE_PATH']=np.get_include()
-import pyximport; pyximport.install()
-from model_cython import fill_model_matrix, fill_gen_model_matrix
-
+if __use_cython__:
+    os.environ['C_INCLUDE_PATH']=np.get_include()
+    import pyximport; pyximport.install()
+    from model_cython import fill_model_matrix, fill_gen_model_matrix
+elif __use_weave__:
+    from model_weave import fill_model_matrix, fill_gen_model_matrix
+else:
+    raise ImportError("Either cython or weave required")
 
 #
 # pretty printing of matices/arrays

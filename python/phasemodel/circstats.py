@@ -9,11 +9,7 @@ __all__ = ['circular_mean', ' circular_correlation', 'circular_variance',
 import os,sys
 import numpy as np
 
-try:
-    from rpy import r as R
-    R.library("CircStats")
-except:
-    print "could not load R-project"
+from . import __use_R__
 
 def circular_mean(phases):
     return np.mean(np.exp(1j*phases))
@@ -42,9 +38,9 @@ def mises_params(direction,n=1):
     "Computes parameters of Von Mises distribution from direction vector"
     def bess(x,r):
         return (i1(x)/i0(x)-r)**2
-    try: # using R (faster by a factor of 10)
+    if __use_R__: # using R (faster by a factor of 10)
         kappa = R.A1inv(np.abs(direction))
-    except:
+    else:
         kappa = float(fmin(bess,np.array([1.]),(np.abs(direction),),disp=0));
     mu = np.angle(direction)
     z = float(n)*np.abs(direction)**2
