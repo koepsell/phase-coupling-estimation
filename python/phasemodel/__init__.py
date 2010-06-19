@@ -36,7 +36,7 @@ __use_weave__ = True
 if __use_weave__:
     try:
         from scipy import weave
-        weave.inline('printf("weave works!\n"')
+        weave.inline('std::cout << "weave works!" << std::endl;')
     except:
         print "WARNING: Coul not load weave"
         __use_weave__ = False
