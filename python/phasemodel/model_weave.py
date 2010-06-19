@@ -1,12 +1,6 @@
-"""
-This module contains functions to model univariate and multivariate
-phase distributions and to fit them to data.
-"""
-
 # load numpy, scipy, etc.
 import numpy as np
 import scipy as sp
-from scipy import sparse
 from scipy import weave
 
 from utils import tic,toc,smod
@@ -26,10 +20,8 @@ def fill_model_matrix(phi):
     tic('weave')
     weave.inline(phasemodel_code_blitz, ['z','adata','arow','acol','b'],
                  type_converters=weave.converters.blitz)
-    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
     toc('weave')
-    return a, b
-
+    return adata, arow, acol, b
 
 phasemodel_code_blitz = """
 int d = Nz[1];
@@ -40,8 +32,6 @@ int ij = -1;
 int kl = -1;
 int ia = -1;
 std::cout << "starting complex weave code (difference coupling only)" << std::endl;
-ij = -1;
-ia = -1;
 for (int i=0; i < d; i++)
 {
     for (int j=0; j < d; j++)
@@ -92,9 +82,8 @@ def fill_gen_model_matrix(phi):
 
     tic('weave')
     weave.inline(gen_phasemodel_code, ['x','q','adata','arow','acol','b'])
-    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
     toc('weave')
-    return a, b
+    return adata, arow, acol, b
 
 gen_phasemodel_code = """
 int d = Nx[0];
@@ -105,8 +94,6 @@ int i,j,k,l;
 int ij = -1;
 int kl = -1;
 int ia = -1;
-ij = -1;
-ia = -1;
 double temp;
 for (int i0=0; i0 < d; i0++) {
   for (int i1=0; i1 < 2; i1++) {

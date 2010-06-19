@@ -1,6 +1,15 @@
 """
 This module contains functions to model univariate and multivariate
 phase distributions and to fit them to data.
+
+:Authors: Charles Cadieu <cadieu@berkeley.edu> and
+          Kilian Koepsell <kilian@berkeley.edu>
+
+:Reference: Cadieu CF, Koepsell K (2010) Phase coupling estimation from
+            multivariate phase statistics. Neural Computation (in press).
+
+:Copyright: 2008-2010, UC Berkeley
+:License: BSD Style
 """
 
 __all__ = ['fit_model', 'fit_gen_model']
@@ -19,7 +28,7 @@ from model_weave import fill_model_matrix, fill_gen_model_matrix
 
 os.environ['C_INCLUDE_PATH']=np.get_include()
 import pyximport; pyximport.install()
-# from model_cython import fit_model
+from model_cython import fill_model_matrix, fill_gen_model_matrix
 
 
 #
@@ -28,13 +37,15 @@ import pyximport; pyximport.install()
 #
 np.set_printoptions(linewidth=195,precision=4)
 
+
 def fit_model(phi, eps=0.):
     assert phi.ndim == 2, 'data has to be two-dimensional'
     assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'    
-    d,nsamples = phi.shape
+    d, nsamples = phi.shape
     nij = d**2-d # number of coupling terms
 
-    a, b = fill_model_matrix(phi)
+    adata, arow, acol, b = fill_model_matrix(phi)
+    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
 
     tic('matrix inversion')
     if eps > 0:
@@ -60,7 +71,11 @@ def fit_model_biased(phi):
 def fit_gen_model(phi):
     assert phi.ndim == 2, 'data has to be two-dimensional'
     assert phi.shape[1] > phi.shape[0], 'data samples have to be in columns'
-    a, b = fill_gen_model_matrix(phi)
+    d, nsamples = phi.shape
+    nij = 4*d**2 # number of coupling terms
+
+    adata, arow, acol, b = fill_gen_model_matrix(phi)
+    a = sparse.coo_matrix((adata,(arow,acol)), (nij,nij))
 
     tic('matrix inversion')
     m_vec,flag = isolve.cg(a.tocsr(),b)

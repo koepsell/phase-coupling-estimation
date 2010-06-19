@@ -70,6 +70,23 @@ def test_reg_phasemodel():
 
     np.testing.assert_almost_equal(K_error, 0.15093053)
 
+def test_compare_weave_cython():
+    from phasemodel.model_weave import fill_model_matrix
+    from phasemodel.model_cython import fill_model_matrix as cfill_model_matrix
+
+    # load test data
+    datadir = os.path.join(os.path.dirname(phasemodel.__file__),'tests','testdata')
+    mdict = np.load(os.path.join(datadir,'three_phases_v2.npz'))
+    for var in mdict.files:
+        globals()[var] = mdict[var]
+
+    adata, arow, acol, b = fill_model_matrix(data)
+    cadata, carow, cacol, cb = cfill_model_matrix(data)
+    np.testing.assert_equal(adata,cadata)
+    np.testing.assert_equal(arow,carow)
+    np.testing.assert_equal(acol,cacol)
+    np.testing.assert_equal(b,cb)    
+
 if __name__ == '__main__':
     import nose
     nose.runmodule()
